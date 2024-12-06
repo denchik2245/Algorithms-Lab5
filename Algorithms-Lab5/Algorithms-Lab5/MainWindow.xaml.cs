@@ -1,23 +1,64 @@
-﻿using System.Text;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+﻿using System.Windows;
+using GraphEditor.Pages;
 
-namespace Algorithms_Lab5;
-
-/// <summary>
-/// Interaction logic for MainWindow.xaml
-/// </summary>
-public partial class MainWindow : Window
+namespace GraphEditor
 {
-    public MainWindow()
+    public partial class MainWindow : Window
     {
-        InitializeComponent();
+        public MainWindow()
+        {
+            InitializeComponent();
+            GraphFrame.Content = new PageTask1();
+        }
+
+        private void MoveButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (GraphFrame.Content is PageTask1 pageTask1)
+            {
+                pageTask1.ActivateMoveMode();
+            }
+        }
+
+        private void AddNodeButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (GraphFrame.Content is PageTask1 pageTask1)
+            {
+                pageTask1.ActivateAddNodeMode();
+            }
+        }
+
+        private void DeleteNodeButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (GraphFrame.Content is PageTask1 pageTask1)
+            {
+                pageTask1.ActivateRemoveNodeMode();
+            }
+        }
+
+        private void AddEdgeButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (GraphFrame.Content is PageTask1 pageTask1)
+            {
+                pageTask1.ActivateAddEdgeMode();
+            }
+        }
+
+        private void DeleteEdgeButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (GraphFrame.Content is PageTask1 pageTask1)
+            {
+                pageTask1.ActivateRemoveEdgeMode();
+            }
+        }
+
+        private void UploadButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Логика для загрузки
+        }
+
+        private void SaveButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Логика для сохранения
+        }
     }
 }

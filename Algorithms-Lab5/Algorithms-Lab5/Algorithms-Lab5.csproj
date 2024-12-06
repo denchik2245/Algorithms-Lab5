@@ -9,4 +9,25 @@
         <UseWPF>true</UseWPF>
     </PropertyGroup>
 
+    <ItemGroup>
+      <None Remove="Resources\connection.svg" />
+      <Resource Include="Resources\connection.svg" />
+      <None Remove="Resources\disconnect.svg" />
+      <Resource Include="Resources\disconnect.svg" />
+      <None Remove="Resources\minus.svg" />
+      <Resource Include="Resources\minus.svg" />
+      <None Remove="Resources\move.svg" />
+      <Resource Include="Resources\move.svg" />
+      <None Remove="Resources\plus.svg" />
+      <Resource Include="Resources\plus.svg" />
+      <None Remove="Resources\save.svg" />
+      <Resource Include="Resources\save.svg" />
+      <None Remove="Resources\upload.svg" />
+      <Resource Include="Resources\upload.svg" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="SharpVectors" Version="1.8.4.2" />
+    </ItemGroup>
+
 </Project>
