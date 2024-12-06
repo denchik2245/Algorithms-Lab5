@@ -12,6 +12,7 @@ namespace Algorithms_Lab5.Tools
         private Point _startPoint;
         private Grid _selectedNode;
         private Canvas _canvas;
+        private Point _virtualPosition;
 
         public bool IsActive { get; set; }
 
@@ -30,6 +31,9 @@ namespace Algorithms_Lab5.Tools
                 _isDragging = true;
                 _selectedNode = grid;
                 _startPoint = e.GetPosition(_canvas);
+                
+                // Повышаем ZIndex выбранного узла
+                Canvas.SetZIndex(_selectedNode, 10);
             }
         }
 
@@ -38,17 +42,21 @@ namespace Algorithms_Lab5.Tools
             if (_isDragging && _selectedNode != null)
             {
                 Point currentPoint = e.GetPosition(_canvas);
-                
+        
                 double offsetX = currentPoint.X - _startPoint.X;
                 double offsetY = currentPoint.Y - _startPoint.Y;
-                
-                double newLeft = Canvas.GetLeft(_selectedNode) + offsetX;
-                double newTop = Canvas.GetTop(_selectedNode) + offsetY;
-                Canvas.SetLeft(_selectedNode, newLeft);
-                Canvas.SetTop(_selectedNode, newTop);
-                
-                UpdateEdges(_selectedNode, newLeft, newTop);
-                
+
+                // Виртуальная позиция узла
+                _virtualPosition = new Point(Canvas.GetLeft(_selectedNode) + offsetX, Canvas.GetTop(_selectedNode) + offsetY);
+
+                // Обновляем реальную позицию узла
+                Canvas.SetLeft(_selectedNode, _virtualPosition.X);
+                Canvas.SetTop(_selectedNode, _virtualPosition.Y);
+
+                // Обновляем рёбра сразу же, чтобы они двигались вместе с узлом
+                UpdateEdges(_selectedNode, _virtualPosition.X, _virtualPosition.Y);
+        
+                // Обновляем стартовую точку для дальнейших перемещений
                 _startPoint = currentPoint;
             }
         }
@@ -58,15 +66,28 @@ namespace Algorithms_Lab5.Tools
             if (_isDragging)
             {
                 _isDragging = false;
+
+                // Обновляем реальное положение узла
+                Canvas.SetLeft(_selectedNode, _virtualPosition.X);
+                Canvas.SetTop(_selectedNode, _virtualPosition.Y);
+
+                // Обновляем рёбра, чтобы они не накладывались на узлы
+                UpdateEdges(_selectedNode, _virtualPosition.X, _virtualPosition.Y);
+
+                // Возвращаем ZIndex узла к исходному значению
+                Canvas.SetZIndex(_selectedNode, 1);
+
                 _selectedNode = null;
             }
         }
 
-        private void UpdateEdges(Grid node, double newLeft, double newTop)
+        public void UpdateEdges(Grid node, double newLeft, double newTop)
         {
-            double centerX = newLeft + (node.ActualWidth / 2);
-            double centerY = newTop + (node.ActualHeight / 2);
-            
+            // Получаем новый центр перемещаемого узла
+            double newCenterX = newLeft + (node.ActualWidth / 2);
+            double newCenterY = newTop + (node.ActualHeight / 2);
+
+            // Перебираем все элементы на Canvas
             foreach (UIElement element in _canvas.Children)
             {
                 if (element is Line line)
@@ -75,22 +96,30 @@ namespace Algorithms_Lab5.Tools
                     {
                         Grid startNode = connectedNodes.Item1;
                         Grid endNode = connectedNodes.Item2;
-                        TextBlock weightTextBlock = connectedNodes.Item3;
-                        
-                        if (startNode == node)
+
+                        // Если это ребро связано с перемещаемым узлом, обновляем его координаты
+                        if (startNode == node || endNode == node)
                         {
-                            line.X1 = centerX;
-                            line.Y1 = centerY;
+                            // Добавляем небольшой отступ, чтобы ребра не накладывались на узлы
+                            double offset = 5; // Небольшой отступ от центра узла, чтобы избежать наложений
+
+                            if (startNode == node)
+                            {
+                                line.X1 = newCenterX + offset;
+                                line.Y1 = newCenterY + offset;
+                            }
+
+                            if (endNode == node)
+                            {
+                                line.X2 = newCenterX + offset;
+                                line.Y2 = newCenterY + offset;
+                            }
+
+                            // Обновляем положение текстового блока (веса ребра)
+                            TextBlock weightTextBlock = connectedNodes.Item3;
+                            Canvas.SetLeft(weightTextBlock, (line.X1 + line.X2) / 2 - weightTextBlock.ActualWidth / 2);
+                            Canvas.SetTop(weightTextBlock, (line.Y1 + line.Y2) / 2 - weightTextBlock.ActualHeight / 2);
                         }
-                        
-                        if (endNode == node)
-                        {
-                            line.X2 = centerX;
-                            line.Y2 = centerY;
-                        }
-                        
-                        Canvas.SetLeft(weightTextBlock, (line.X1 + line.X2) / 2 - weightTextBlock.ActualWidth / 2);
-                        Canvas.SetTop(weightTextBlock, (line.Y1 + line.Y2) / 2 - weightTextBlock.ActualHeight / 2);
                     }
                 }
             }

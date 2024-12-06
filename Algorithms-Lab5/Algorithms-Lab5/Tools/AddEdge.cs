@@ -64,7 +64,7 @@ namespace Algorithms_Lab5.Tools
             return new Point(borderX, borderY);
         }
 
-        private void DrawEdgeWithWeight(Canvas canvas, Point startPoint, Point endPoint, Grid firstNode, Grid secondNode)
+        public void DrawEdgeWithWeight(Canvas canvas, Point startPoint, Point endPoint, Grid firstNode, Grid secondNode)
         {
             // Создаем линию между двумя точками
             Line edge = new Line

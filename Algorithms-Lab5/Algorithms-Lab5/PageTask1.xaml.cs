@@ -13,6 +13,7 @@ namespace GraphEditor.Pages
         private RemoveNode _removeNodeTool = new RemoveNode();
         private AddEdge _addEdgeTool = new AddEdge();
         private RemoveEdge _removeEdgeTool = new RemoveEdge();
+        private LoadGraph _loadGraphTool = new LoadGraph();
 
         public PageTask1()
         {
@@ -21,13 +22,7 @@ namespace GraphEditor.Pages
         }
 
         // Активируем режимы
-        public void ActivateAddNodeMode()
-        {
-            _addNodeTool.IsActive = true;
-            _removeNodeTool.IsActive = false;
-            _addEdgeTool.IsActive = false;
-        }
-
+        //Перемещение
         public void ActivateMoveMode()
         {
             _addNodeTool.IsActive = false;
@@ -37,63 +32,80 @@ namespace GraphEditor.Pages
             _moveTool.IsActive = true;
         }
         
+        //Добавить узел
+        public void ActivateAddNodeMode()
+        {
+            _addNodeTool.IsActive = true;
+            _removeNodeTool.IsActive = false;
+            _addEdgeTool.IsActive = false;
+            _moveTool.IsActive = false;
+        }
+        
+        //Удалить узел
         public void ActivateRemoveNodeMode()
         {
             _addNodeTool.IsActive = false;
             _removeNodeTool.IsActive = true;
             _addEdgeTool.IsActive = false;
+            _moveTool.IsActive = false;
         }
         
+        //Добавить ребро
         public void ActivateAddEdgeMode()
         {
             _addNodeTool.IsActive = false;
             _removeNodeTool.IsActive = false;
             _addEdgeTool.IsActive = true;
+            _moveTool.IsActive = false;
         }
         
+        //Удалить ребро
         public void ActivateRemoveEdgeMode()
         {
             _addNodeTool.IsActive = false;
             _removeNodeTool.IsActive = false;
             _addEdgeTool.IsActive = false;
             _removeEdgeTool.IsActive = true;
+            _moveTool.IsActive = false;
+        }
+        
+        //Загрузить файл
+        public void LoadGraph()
+        {
+            var loadGraphTool = new LoadGraph();
+            loadGraphTool.Load(MainCanvas);
         }
         
         // Обработчик клика по Canvas
         private void MainCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            // Перемещение узлов
             if (_moveTool.IsActive)
             {
                 _moveTool.StartDrag(e);
             }
-            
-            // Логика для добавления узлов
-            if (_addNodeTool.IsActive)
+            else if (_addNodeTool.IsActive)
             {
                 Point clickPosition = e.GetPosition(MainCanvas);
                 _addNodeTool.Add(MainCanvas, clickPosition);
             }
-
-            // Логика для удаления узлов
-            if (_removeNodeTool.IsActive)
+            else if (_removeNodeTool.IsActive)
             {
                 _removeNodeTool.Remove(MainCanvas, e);
             }
-
-            // Логика для добавления ребра
-            if (_addEdgeTool.IsActive)
+            else if (_addEdgeTool.IsActive)
             {
                 if (e.OriginalSource is FrameworkElement clickedElement)
                 {
                     _addEdgeTool.SelectNode(MainCanvas, clickedElement.Parent as UIElement);
                 }
             }
-
-            // Логика для удаления ребра
-            if (_removeEdgeTool.IsActive)
+            else if (_removeEdgeTool.IsActive)
             {
                 _removeEdgeTool.Remove(MainCanvas, e);
+            }
+            else if (_loadGraphTool.IsActive)
+            {
+                _loadGraphTool.Load(MainCanvas);
             }
         }
         

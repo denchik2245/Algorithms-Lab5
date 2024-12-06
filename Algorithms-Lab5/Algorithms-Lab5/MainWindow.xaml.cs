@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using Algorithms_Lab5.Tools;
 using GraphEditor.Pages;
 
 namespace GraphEditor
@@ -53,12 +54,34 @@ namespace GraphEditor
 
         private void UploadButton_Click(object sender, RoutedEventArgs e)
         {
-            // Логика для загрузки
+            if (GraphFrame.Content is PageTask1 pageTask1)
+            {
+                try
+                {
+                    pageTask1.LoadGraph();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Ошибка при загрузке графа: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            else
+            {
+                MessageBox.Show("Граф отсутствует на текущей странице.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
-
+        
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            // Логика для сохранения
+            if (GraphFrame.Content is PageTask1 pageTask1)
+            {
+                var saveGraphTool = new SaveGraph();
+                saveGraphTool.Save(pageTask1.MainCanvas);
+            }
+            else
+            {
+                MessageBox.Show("Граф отсутствует на текущей странице.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
     }
 }
