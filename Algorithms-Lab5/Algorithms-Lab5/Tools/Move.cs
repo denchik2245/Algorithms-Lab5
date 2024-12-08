@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using Algorithms_Lab5.Utils;
 
 namespace Algorithms_Lab5.Tools
 {
@@ -13,8 +14,14 @@ namespace Algorithms_Lab5.Tools
         private Grid _selectedNode;
         private Canvas _canvas;
         private Point _virtualPosition;
+        private readonly GraphData _graphData;
 
         public bool IsActive { get; set; }
+
+        public Move(GraphData graphData)
+        {
+            _graphData = graphData;
+        }
 
         public void Initialize(Canvas canvas)
         {
@@ -24,14 +31,14 @@ namespace Algorithms_Lab5.Tools
         public void StartDrag(MouseButtonEventArgs e)
         {
             if (!IsActive || _canvas == null) return;
-            
+
             HitTestResult hitResult = VisualTreeHelper.HitTest(_canvas, e.GetPosition(_canvas));
             if (hitResult?.VisualHit is Ellipse && VisualTreeHelper.GetParent(hitResult.VisualHit) is Grid grid)
             {
                 _isDragging = true;
                 _selectedNode = grid;
                 _startPoint = e.GetPosition(_canvas);
-                
+
                 // Повышаем ZIndex выбранного узла
                 Canvas.SetZIndex(_selectedNode, 10);
             }
@@ -42,7 +49,7 @@ namespace Algorithms_Lab5.Tools
             if (_isDragging && _selectedNode != null)
             {
                 Point currentPoint = e.GetPosition(_canvas);
-        
+
                 double offsetX = currentPoint.X - _startPoint.X;
                 double offsetY = currentPoint.Y - _startPoint.Y;
 
@@ -55,7 +62,7 @@ namespace Algorithms_Lab5.Tools
 
                 // Обновляем рёбра сразу же, чтобы они двигались вместе с узлом
                 UpdateEdges(_selectedNode, _virtualPosition.X, _virtualPosition.Y);
-        
+
                 // Обновляем стартовую точку для дальнейших перемещений
                 _startPoint = currentPoint;
             }
@@ -67,9 +74,13 @@ namespace Algorithms_Lab5.Tools
             {
                 _isDragging = false;
 
-                // Обновляем реальное положение узла
-                Canvas.SetLeft(_selectedNode, _virtualPosition.X);
-                Canvas.SetTop(_selectedNode, _virtualPosition.Y);
+                // Обновляем координаты узла в GraphData
+                if (_selectedNode != null && _selectedNode.Tag is string nodeLabel)
+                {
+                    double newX = _virtualPosition.X + (_selectedNode.ActualWidth / 2);
+                    double newY = _virtualPosition.Y + (_selectedNode.ActualHeight / 2);
+                    _graphData.UpdateNodePosition(nodeLabel, newX, newY);
+                }
 
                 // Обновляем рёбра, чтобы они не накладывались на узлы
                 UpdateEdges(_selectedNode, _virtualPosition.X, _virtualPosition.Y);
@@ -125,4 +136,5 @@ namespace Algorithms_Lab5.Tools
             }
         }
     }
+
 }

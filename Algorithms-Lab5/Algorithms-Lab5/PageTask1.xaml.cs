@@ -2,80 +2,97 @@
 using System.Windows.Controls;
 using System.Windows.Input;
 using Algorithms_Lab5.Tools;
-using GraphEditor.Tools;
+using Algorithms_Lab5.Utils;
 
-namespace GraphEditor.Pages
+namespace Algorithms_Lab5
 {
     public partial class PageTask1 : Page
     {
-        private Move _moveTool = new Move();
-        private AddNode _addNodeTool = new AddNode();
-        private RemoveNode _removeNodeTool = new RemoveNode();
-        private AddEdge _addEdgeTool = new AddEdge();
-        private RemoveEdge _removeEdgeTool = new RemoveEdge();
-        private LoadGraph _loadGraphTool = new LoadGraph();
+        private GraphManager _graphManager;
+        private Move _moveTool;
+        private LoadGraph _loadGraphTool;
+        public GraphManager GraphManager => _graphManager;
+        public Canvas MainCanvasControl => MainCanvas;
+        
 
         public PageTask1()
         {
             InitializeComponent();
-            _moveTool.Initialize(MainCanvas);
-        }
+    
+            // Создаем GraphManager
+            _graphManager = new GraphManager();
 
+            // Инициализируем инструмент перемещения
+            _moveTool = new Move(_graphManager.GraphData); // Передаем GraphData в Move
+            _moveTool.Initialize(MainCanvas); // Привязываем Canvas
+
+            // Инициализируем инструмент загрузки графа
+            _loadGraphTool = new LoadGraph(_graphManager);
+        }
+        
         // Активируем режимы
-        //Перемещение
+        // Перемещение
         public void ActivateMoveMode()
         {
-            _addNodeTool.IsActive = false;
-            _removeNodeTool.IsActive = false;
-            _addEdgeTool.IsActive = false;
-            _removeEdgeTool.IsActive = false;
+            // Деактивируем все режимы GraphManager
+            _graphManager.AddNodeTool.IsActive = false;
+            _graphManager.RemoveNodeTool.IsActive = false;
+            _graphManager.AddEdgeTool.IsActive = false;
+            _graphManager.RemoveEdgeTool.IsActive = false;
+
+            // Активируем MoveTool
             _moveTool.IsActive = true;
         }
-        
-        //Добавить узел
+
+        // Добавить узел
         public void ActivateAddNodeMode()
         {
-            _addNodeTool.IsActive = true;
-            _removeNodeTool.IsActive = false;
-            _addEdgeTool.IsActive = false;
+            // Активируем AddNode, деактивируем остальные из GraphManager и MoveTool
+            _graphManager.AddNodeTool.IsActive = true;
+            _graphManager.RemoveNodeTool.IsActive = false;
+            _graphManager.AddEdgeTool.IsActive = false;
+            _graphManager.RemoveEdgeTool.IsActive = false;
             _moveTool.IsActive = false;
         }
-        
-        //Удалить узел
+
+        // Удалить узел
         public void ActivateRemoveNodeMode()
         {
-            _addNodeTool.IsActive = false;
-            _removeNodeTool.IsActive = true;
-            _addEdgeTool.IsActive = false;
+            _graphManager.AddNodeTool.IsActive = false;
+            _graphManager.RemoveNodeTool.IsActive = true;
+            _graphManager.AddEdgeTool.IsActive = false;
+            _graphManager.RemoveEdgeTool.IsActive = false;
             _moveTool.IsActive = false;
         }
-        
-        //Добавить ребро
+
+        // Добавить ребро
         public void ActivateAddEdgeMode()
         {
-            _addNodeTool.IsActive = false;
-            _removeNodeTool.IsActive = false;
-            _addEdgeTool.IsActive = true;
+            _graphManager.AddNodeTool.IsActive = false;
+            _graphManager.RemoveNodeTool.IsActive = false;
+            _graphManager.AddEdgeTool.IsActive = true;
+            _graphManager.RemoveEdgeTool.IsActive = false;
             _moveTool.IsActive = false;
         }
-        
-        //Удалить ребро
+
+        // Удалить ребро
         public void ActivateRemoveEdgeMode()
         {
-            _addNodeTool.IsActive = false;
-            _removeNodeTool.IsActive = false;
-            _addEdgeTool.IsActive = false;
-            _removeEdgeTool.IsActive = true;
+            _graphManager.AddNodeTool.IsActive = false;
+            _graphManager.RemoveNodeTool.IsActive = false;
+            _graphManager.AddEdgeTool.IsActive = false;
+            _graphManager.RemoveEdgeTool.IsActive = true;
             _moveTool.IsActive = false;
         }
-        
-        //Загрузить файл
+
+        // Загрузить граф
         public void LoadGraph()
         {
-            var loadGraphTool = new LoadGraph();
-            loadGraphTool.Load(MainCanvas);
+            _loadGraphTool.IsActive = true;
+            _loadGraphTool.Load(MainCanvas);
+            _loadGraphTool.IsActive = false;
         }
-        
+
         // Обработчик клика по Canvas
         private void MainCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
@@ -83,32 +100,34 @@ namespace GraphEditor.Pages
             {
                 _moveTool.StartDrag(e);
             }
-            else if (_addNodeTool.IsActive)
+            else if (_graphManager.AddNodeTool.IsActive)
             {
                 Point clickPosition = e.GetPosition(MainCanvas);
-                _addNodeTool.Add(MainCanvas, clickPosition);
+                _graphManager.AddNodeTool.Add(MainCanvas, clickPosition);
             }
-            else if (_removeNodeTool.IsActive)
+            else if (_graphManager.RemoveNodeTool.IsActive)
             {
-                _removeNodeTool.Remove(MainCanvas, e);
+                _graphManager.RemoveNodeTool.Remove(MainCanvas, e);
             }
-            else if (_addEdgeTool.IsActive)
+            else if (_graphManager.AddEdgeTool.IsActive)
             {
                 if (e.OriginalSource is FrameworkElement clickedElement)
                 {
-                    _addEdgeTool.SelectNode(MainCanvas, clickedElement.Parent as UIElement);
+                    // Здесь важно, что узел находится в Grid, а Grid.Tag содержит уникальную метку узла
+                    _graphManager.AddEdgeTool.SelectNode(MainCanvas, clickedElement.Parent as UIElement);
                 }
             }
-            else if (_removeEdgeTool.IsActive)
+            else if (_graphManager.RemoveEdgeTool.IsActive)
             {
-                _removeEdgeTool.Remove(MainCanvas, e);
+                _graphManager.RemoveEdgeTool.Remove(MainCanvas, e);
             }
             else if (_loadGraphTool.IsActive)
             {
+                // Если вдруг надо загрузить повторно по клику (возможно вы так не делаете, но на всякий случай)
                 _loadGraphTool.Load(MainCanvas);
             }
         }
-        
+
         private void MainCanvas_MouseMove(object sender, MouseEventArgs e)
         {
             if (_moveTool.IsActive)
@@ -125,4 +144,5 @@ namespace GraphEditor.Pages
             }
         }
     }
+
 }

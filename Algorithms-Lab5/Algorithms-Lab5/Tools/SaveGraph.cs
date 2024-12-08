@@ -1,4 +1,5 @@
-﻿using Microsoft.Win32;
+﻿using System.Globalization;
+using Microsoft.Win32;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -13,7 +14,8 @@ namespace Algorithms_Lab5.Tools
             SaveFileDialog saveFileDialog = new SaveFileDialog
             {
                 Filter = "CSV files (*.csv)|*.csv",
-                FileName = "graph.csv"
+                FileName = "graph.csv",
+                Title = "Сохранить граф"
             };
 
             if (saveFileDialog.ShowDialog() == true)
@@ -21,9 +23,10 @@ namespace Algorithms_Lab5.Tools
                 string filePath = saveFileDialog.FileName;
                 var adjacencyMatrix = GenerateAdjacencyMatrixWithCoordinates(canvas);
                 SaveMatrixToCsv(adjacencyMatrix, filePath);
+                MessageBox.Show("Граф успешно сохранён.", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
-
+        
         private List<(Grid Node, double X, double Y)> GetNodesWithCoordinates(Canvas canvas)
         {
             var nodes = new List<(Grid Node, double X, double Y)>();
@@ -31,52 +34,73 @@ namespace Algorithms_Lab5.Tools
             {
                 if (element is Grid grid)
                 {
-                    double x = Canvas.GetLeft(grid) + (grid.ActualWidth / 2);
-                    double y = Canvas.GetTop(grid) + (grid.ActualHeight / 2);
+                    double x = Canvas.GetLeft(grid) + (grid.Width / 2); // Используем фиксированную ширину узла
+                    double y = Canvas.GetTop(grid) + (grid.Height / 2); // Используем фиксированную высоту узла
                     nodes.Add((grid, x, y));
                 }
             }
             return nodes;
         }
-
+        
         private string[,] GenerateAdjacencyMatrixWithCoordinates(Canvas canvas)
         {
             var nodesWithCoordinates = GetNodesWithCoordinates(canvas);
             int nodeCount = nodesWithCoordinates.Count;
 
+            // Матрица размером nodeCount x (nodeCount + 2)
             string[,] matrix = new string[nodeCount, nodeCount + 2];
 
+            // Инициализация весов ребер как "0"
             for (int i = 0; i < nodeCount; i++)
             {
                 for (int j = 0; j < nodeCount; j++)
                 {
                     matrix[i, j] = "0";
                 }
-                matrix[i, nodeCount] = nodesWithCoordinates[i].X.ToString(System.Globalization.CultureInfo.InvariantCulture);
-                matrix[i, nodeCount + 1] = nodesWithCoordinates[i].Y.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                // Запись координат X и Y
+                matrix[i, nodeCount] = nodesWithCoordinates[i].X.ToString(CultureInfo.InvariantCulture);
+                matrix[i, nodeCount + 1] = nodesWithCoordinates[i].Y.ToString(CultureInfo.InvariantCulture);
             }
 
+            // Обход всех элементов Canvas для поиска линий (ребер)
             foreach (UIElement element in canvas.Children)
             {
                 if (element is Line line && line.Tag is Tuple<Grid, Grid, TextBlock> connectedNodes)
                 {
                     Grid startNode = connectedNodes.Item1;
                     Grid endNode = connectedNodes.Item2;
+                    TextBlock weightText = connectedNodes.Item3;
 
+                    // Извлечение индексов узлов
                     int startIndex = nodesWithCoordinates.FindIndex(n => n.Node == startNode);
                     int endIndex = nodesWithCoordinates.FindIndex(n => n.Node == endNode);
 
                     if (startIndex != -1 && endIndex != -1)
                     {
-                        matrix[startIndex, endIndex] = "1";
-                        matrix[endIndex, startIndex] = "1";
+                        // Извлечение веса ребра
+                        string weight = weightText.Text.Trim();
+
+                        // Валидация веса
+                        if (double.TryParse(weight, NumberStyles.Float, CultureInfo.InvariantCulture, out double parsedWeight))
+                        {
+                            if (parsedWeight > 0)
+                            {
+                                matrix[startIndex, endIndex] = parsedWeight.ToString(CultureInfo.InvariantCulture);
+                                matrix[endIndex, startIndex] = parsedWeight.ToString(CultureInfo.InvariantCulture);
+                            }
+                        }
+                        else
+                        {
+                            // Если вес некорректен, оставить "0" и уведомить пользователя
+                            MessageBox.Show($"Некорректный вес ребра между узлами {startIndex + 1} и {endIndex + 1}: '{weight}'. Вес не будет сохранён.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                        }
                     }
                 }
             }
 
             return matrix;
         }
-
+        
         private void SaveMatrixToCsv(string[,] matrix, string filePath)
         {
             using (StreamWriter writer = new StreamWriter(filePath))
@@ -89,7 +113,7 @@ namespace Algorithms_Lab5.Tools
                     var row = new List<string>();
                     for (int j = 0; j < cols; j++)
                     {
-                        row.Add(matrix[i, j] ?? "");
+                        row.Add(matrix[i, j] ?? "0"); // Если значение null, заменить на "0"
                     }
                     writer.WriteLine(string.Join(";", row));
                 }
@@ -97,3 +121,4 @@ namespace Algorithms_Lab5.Tools
         }
     }
 }
+

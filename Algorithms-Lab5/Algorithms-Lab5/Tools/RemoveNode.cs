@@ -4,12 +4,19 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using System.Collections.Generic;
+using Algorithms_Lab5.Utils;
 
 namespace Algorithms_Lab5.Tools
 {
-    public class RemoveNode
+   public class RemoveNode
     {
         public bool IsActive { get; set; }
+        private readonly GraphData _graphData;
+
+        public RemoveNode(GraphData graphData)
+        {
+            _graphData = graphData;
+        }
 
         public void Remove(Canvas canvas, MouseButtonEventArgs e)
         {
@@ -18,10 +25,9 @@ namespace Algorithms_Lab5.Tools
             // Получаем позицию клика
             Point clickPosition = e.GetPosition(canvas);
 
-            // Узел, который нужно удалить
+            // Узел для удаления
             Grid nodeToRemove = null;
 
-            // Найдем узел, который был кликнут
             foreach (UIElement element in canvas.Children)
             {
                 if (element is Grid grid)
@@ -40,45 +46,65 @@ namespace Algorithms_Lab5.Tools
                 }
             }
 
-            if (nodeToRemove == null) return;
+            if (nodeToRemove == null)
+            {
+                MessageBox.Show("Узел для удаления не найден.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
 
-            // Удаляем все ребра, связанные с узлом
+            // Удаление всех рёбер, связанных с узлом
             RemoveConnectedEdges(canvas, nodeToRemove);
 
-            // Удаляем сам узел
+            // Удаляем узел из GraphData
+            if (nodeToRemove.Tag is string nodeLabel)
+            {
+                _graphData.RemoveNode(nodeLabel);
+            }
+
+            // Удаляем узел визуально
             canvas.Children.Remove(nodeToRemove);
         }
 
         private void RemoveConnectedEdges(Canvas canvas, Grid node)
         {
-            // Список для хранения ребер, которые нужно удалить
-            List<UIElement> edgesToRemove = new List<UIElement>();
+            // Список для удаления рёбер и их текстовых блоков
+            var elementsToRemove = new List<UIElement>();
 
-            foreach (UIElement element in canvas.Children)
+            // Перебираем Canvas.Children, добавляя элементы для удаления в список
+            foreach (UIElement element in canvas.Children.OfType<UIElement>().ToList()) // Создаём временный список
             {
                 if (element is Line line && line.Tag is Tuple<Grid, Grid, TextBlock> connectedNodes)
                 {
-                    // Проверяем, связан ли узел с началом или концом линии
+                    // Если узел связан с началом или концом рёбра
                     if (connectedNodes.Item1 == node || connectedNodes.Item2 == node)
                     {
                         // Добавляем линию в список для удаления
-                        edgesToRemove.Add(line);
+                        elementsToRemove.Add(line);
 
-                        // Удаляем текст веса
-                        TextBlock weightTextBlock = connectedNodes.Item3;
-                        if (weightTextBlock != null)
+                        // Добавляем текст веса, если он есть
+                        if (connectedNodes.Item3 is TextBlock weightTextBlock)
                         {
-                            edgesToRemove.Add(weightTextBlock);
+                            elementsToRemove.Add(weightTextBlock);
+                        }
+
+                        // Удаляем ребро из GraphData
+                        string firstLabel = connectedNodes.Item1.Tag as string;
+                        string secondLabel = connectedNodes.Item2.Tag as string;
+
+                        if (!string.IsNullOrEmpty(firstLabel) && !string.IsNullOrEmpty(secondLabel))
+                        {
+                            _graphData.RemoveEdge(firstLabel, secondLabel);
                         }
                     }
                 }
             }
 
-            // Удаляем линии и текстовые блоки из Canvas
-            foreach (var edge in edgesToRemove)
+            // Удаляем элементы из Canvas вне итерации
+            foreach (var element in elementsToRemove)
             {
-                canvas.Children.Remove(edge);
+                canvas.Children.Remove(element);
             }
         }
     }
+
 }

@@ -1,6 +1,9 @@
 ﻿using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Shapes;
+using Algorithms_Lab5;
+using Algorithms_Lab5._1task;
 using Algorithms_Lab5.Tools;
-using GraphEditor.Pages;
 
 namespace GraphEditor
 {
@@ -83,5 +86,25 @@ namespace GraphEditor
                 MessageBox.Show("Граф отсутствует на текущей странице.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+        
+        private async void ExecuteButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (GraphFrame.Content is PageTask1 pageTask1)
+            {
+                // Предположим, что вы хотите начать обход с узла под номером 1 (Label = "1")
+                string startNodeLabel = "1";
+
+                var bfs = new BreadthFirstSearch(OutputTextBox);
+                OutputTextBox.Clear();
+
+                // Запускаем обход, используя GraphData из GraphManager
+                await bfs.Execute(pageTask1.GraphManager.GraphData, startNodeLabel);
+            }
+            else
+            {
+                MessageBox.Show("Граф отсутствует на текущей странице.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        
     }
 }

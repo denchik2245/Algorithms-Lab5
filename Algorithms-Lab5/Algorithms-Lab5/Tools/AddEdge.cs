@@ -1,7 +1,11 @@
-﻿using System.Windows;
+﻿using System;
+using System.Globalization;
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using Algorithms_Lab5.Utils;
 
 namespace Algorithms_Lab5.Tools
 {
@@ -9,8 +13,13 @@ namespace Algorithms_Lab5.Tools
     {
         private Grid _firstNode;
         private bool _isSelectingFirstNode = true;
-
         public bool IsActive { get; set; }
+        private readonly GraphData _graphData;
+
+        public AddEdge(GraphData graphData)
+        {
+            _graphData = graphData;
+        }
 
         public void SelectNode(Canvas canvas, UIElement clickedElement)
         {
@@ -23,29 +32,35 @@ namespace Algorithms_Lab5.Tools
             }
             else
             {
-                Point firstNodeCenter = GetNodeCenter(canvas, _firstNode);
-                Point secondNodeCenter = GetNodeCenter(canvas, node);
+                Point firstNodeCenter = GetNodeCenter(_firstNode);
+                Point secondNodeCenter = GetNodeCenter(node);
 
-                // Учитываем радиус круга (в данном случае 35, так как круг 70x70)
                 const double nodeRadius = 35;
-                
+
                 Point startPoint = GetPointOnCircleBorder(firstNodeCenter, secondNodeCenter, nodeRadius);
                 Point endPoint = GetPointOnCircleBorder(secondNodeCenter, firstNodeCenter, nodeRadius);
-                
-                DrawEdgeWithWeight(canvas, startPoint, endPoint, _firstNode, node);
-                
+
+                string firstLabel = (string)_firstNode.Tag;
+                string secondLabel = (string)node.Tag;
+
+                // Создаём TextBlock для отображения веса
+                TextBlock weightText = CreateWeightTextBlock("0", canvas);
+
+                // Рисуем ребро с весом "0" и добавляем в GraphData
+                Line edge = DrawEdgeWithWeight(canvas, _firstNode, node, weightText);
+                _graphData.AddEdge(firstLabel, secondLabel, 0, edge, weightText);
+
                 _firstNode = null;
                 _isSelectingFirstNode = true;
             }
         }
 
-        private Point GetNodeCenter(Canvas canvas, Grid node)
+        private Point GetNodeCenter(Grid node)
         {
-            // Получаем центр узла
             double left = Canvas.GetLeft(node);
             double top = Canvas.GetTop(node);
-            double centerX = left + (node.ActualWidth / 2);
-            double centerY = top + (node.ActualHeight / 2);
+            double centerX = left + 35;
+            double centerY = top + 35;
             return new Point(centerX, centerY);
         }
 
@@ -53,20 +68,30 @@ namespace Algorithms_Lab5.Tools
         {
             double dx = targetPoint.X - circleCenter.X;
             double dy = targetPoint.Y - circleCenter.Y;
-            double distance = System.Math.Sqrt(dx * dx + dy * dy);
-            
+            double distance = Math.Sqrt(dx * dx + dy * dy);
+
+            if (distance == 0) return circleCenter;
+
             double normalizedX = dx / distance;
             double normalizedY = dy / distance;
-            
+
             double borderX = circleCenter.X + normalizedX * radius;
             double borderY = circleCenter.Y + normalizedY * radius;
 
             return new Point(borderX, borderY);
         }
 
-        public void DrawEdgeWithWeight(Canvas canvas, Point startPoint, Point endPoint, Grid firstNode, Grid secondNode)
+        public Line DrawEdgeWithWeight(Canvas canvas, Grid firstNode, Grid secondNode, TextBlock weightText)
         {
-            // Создаем линию между двумя точками
+            Point firstNodeCenter = GetNodeCenter(firstNode);
+            Point secondNodeCenter = GetNodeCenter(secondNode);
+
+            const double nodeRadius = 35;
+
+            Point startPoint = GetPointOnCircleBorder(firstNodeCenter, secondNodeCenter, nodeRadius);
+            Point endPoint = GetPointOnCircleBorder(secondNodeCenter, firstNodeCenter, nodeRadius);
+
+            // Создаём линию для рёбра
             Line edge = new Line
             {
                 X1 = startPoint.X,
@@ -77,10 +102,26 @@ namespace Algorithms_Lab5.Tools
                 StrokeThickness = 5
             };
 
-            // Создаем текстовый блок для веса ребра
+            // Устанавливаем Tag у Line для связи с TextBlock и узлами
+            edge.Tag = Tuple.Create(firstNode, secondNode, weightText);
+
+            double midX = (startPoint.X + endPoint.X) / 2;
+            double midY = (startPoint.Y + endPoint.Y) / 2;
+            Canvas.SetLeft(weightText, midX);
+            Canvas.SetTop(weightText, midY);
+
+            // Добавляем элементы на Canvas
+            canvas.Children.Add(edge);
+            canvas.Children.Add(weightText);
+
+            return edge;
+        }
+
+        public TextBlock CreateWeightTextBlock(string weight, Canvas canvas)
+        {
             TextBlock weightText = new TextBlock
             {
-                Text = "0", // По умолчанию вес = 0
+                Text = weight,
                 Foreground = Brushes.Black,
                 Background = Brushes.White,
                 FontSize = 14,
@@ -88,23 +129,26 @@ namespace Algorithms_Lab5.Tools
                 TextAlignment = TextAlignment.Center,
                 Padding = new Thickness(2)
             };
-            
-            Canvas.SetLeft(weightText, (startPoint.X + endPoint.X) / 2 - weightText.ActualWidth / 2);
-            Canvas.SetTop(weightText, (startPoint.Y + endPoint.Y) / 2 - weightText.ActualHeight / 2);
-            
-            edge.Tag = new Tuple<Grid, Grid, TextBlock>(firstNode, secondNode, weightText);
-            
+
             weightText.MouseLeftButtonDown += (sender, args) =>
             {
                 string input = Microsoft.VisualBasic.Interaction.InputBox("Введите новый вес ребра:", "Изменить вес", weightText.Text);
-                if (int.TryParse(input, out int newWeight))
+                if (double.TryParse(input, out double newWeight) && newWeight >= 0)
                 {
-                    weightText.Text = newWeight.ToString();
+                    weightText.Text = newWeight.ToString(CultureInfo.InvariantCulture);
+
+                    // Обновляем вес в GraphData
+                    string firstLabel = (string)_firstNode.Tag;
+                    string secondLabel = (string)((Grid)canvas.Children.Cast<UIElement>().FirstOrDefault(e => e is Grid && Canvas.GetLeft((Grid)e) == Canvas.GetLeft(weightText))).Tag;
+                    _graphData.AddEdge(firstLabel, secondLabel, newWeight, null, weightText);
+                }
+                else
+                {
+                    MessageBox.Show("Некорректное значение веса. Введите неотрицательное число.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             };
-            
-            canvas.Children.Add(edge);
-            canvas.Children.Add(weightText);
+
+            return weightText;
         }
     }
 }
