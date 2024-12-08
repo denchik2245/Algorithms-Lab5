@@ -24,6 +24,8 @@
       <Resource Include="Resources\save.svg" />
       <None Remove="Resources\upload.svg" />
       <Resource Include="Resources\upload.svg" />
+      <None Remove="Resources\clear.svg" />
+      <Resource Include="Resources\clear.svg" />
     </ItemGroup>
 
     <ItemGroup>

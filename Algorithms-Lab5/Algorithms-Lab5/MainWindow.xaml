@@ -60,7 +60,6 @@
             <Setter Property="BorderBrush" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Padding" Value="10,5,10,5" />
-            <Setter Property="Width" Value="100" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -143,6 +142,12 @@
             <!-- Нижние кнопки (Загрузить, Сохранить) -->
             <StackPanel Grid.Row="1" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,20" Width="150">
                 
+                <!-- Кнопка "Очистить" -->
+                <Button Name="ClearButton" Style="{StaticResource IconButtonStyle}" 
+                        Tag="pack://application:,,,/Resources/clear.svg" 
+                        Content="Очистить" 
+                        Click="ClearButton_Click"/>
+                
                 <!-- Разделительная линия -->
                 <Rectangle Height="1" Fill="#D8D8D8" Margin="0,20,0,20" HorizontalAlignment="Stretch"/>
                 
@@ -183,18 +188,20 @@
                           SelectedIndex="0">
                     <ComboBoxItem Content="Обход в ширину"/>
                     <ComboBoxItem Content="Обход в глубину"/>
-                    <ComboBoxItem Content="Алгоритм 3"/>
+                    <ComboBoxItem Content="Транспортная сеть"/>
+                    <ComboBoxItem Content="Минимальное остовное дерево"/>
+                    <ComboBoxItem Content="Кратчайший путь"/>
                 </ComboBox>
-
+                
                 <!-- Кнопка "Выполнить" -->
-                <Button Name="ExecuteButton" 
-                        Content="Выполнить" 
-                        Margin="0,0,0,20" 
-                        HorizontalAlignment="Stretch" 
-                        FontSize="14"
-                        Height="30" 
-                        Click="ExecuteButton_Click"
-                        Style="{StaticResource CustomButtonStyle}"/>
+                <Border Margin="0,0,0,20">
+                    <Button Name="ExecuteButton" 
+                            Content="Выполнить" 
+                            Style="{StaticResource CustomButtonStyle}" 
+                            HorizontalAlignment="Stretch" 
+                            Height="30" 
+                            Click="ExecuteButton_Click"/>
+                </Border>
 
                 <!-- Текстовое поле для вывода текста -->
                 <TextBox Name="OutputTextBox" 

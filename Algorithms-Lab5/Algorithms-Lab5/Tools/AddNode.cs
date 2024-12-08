@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using Algorithms_Lab5.Utils;
+using GraphEditor;
 
 namespace Algorithms_Lab5.Tools
 {
@@ -66,7 +67,11 @@ namespace Algorithms_Lab5.Tools
             // Добавляем обработчик клика для взаимодействия с узлом (например, для добавления рёбер)
             container.MouseLeftButtonDown += (sender, args) =>
             {
-                // Можно добавить взаимодействие с AddEdgeTool или другими инструментами
+                if (Application.Current.MainWindow is MainWindow mainWindow)
+                {
+                    string nodeLabel = container.Tag.ToString();
+                    mainWindow.SelectStartNode(nodeLabel);
+                }
             };
 
             // Добавляем узел на Canvas

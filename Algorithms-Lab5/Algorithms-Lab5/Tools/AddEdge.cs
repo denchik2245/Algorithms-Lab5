@@ -110,6 +110,9 @@ namespace Algorithms_Lab5.Tools
             Canvas.SetLeft(weightText, midX);
             Canvas.SetTop(weightText, midY);
 
+            // Привязываем TextBlock к Line
+            weightText.Tag = edge;
+
             // Добавляем элементы на Canvas
             canvas.Children.Add(edge);
             canvas.Children.Add(weightText);
@@ -132,19 +135,27 @@ namespace Algorithms_Lab5.Tools
 
             weightText.MouseLeftButtonDown += (sender, args) =>
             {
-                string input = Microsoft.VisualBasic.Interaction.InputBox("Введите новый вес ребра:", "Изменить вес", weightText.Text);
-                if (double.TryParse(input, out double newWeight) && newWeight >= 0)
+                if (sender is TextBlock clickedTextBlock && clickedTextBlock.Tag is Line line && line.Tag is Tuple<Grid, Grid, TextBlock> edgeData)
                 {
-                    weightText.Text = newWeight.ToString(CultureInfo.InvariantCulture);
+                    string input = Microsoft.VisualBasic.Interaction.InputBox("Введите новый вес ребра:", "Изменить вес", clickedTextBlock.Text);
+                    if (double.TryParse(input, out double newWeight) && newWeight >= 0)
+                    {
+                        clickedTextBlock.Text = newWeight.ToString(CultureInfo.InvariantCulture);
 
-                    // Обновляем вес в GraphData
-                    string firstLabel = (string)_firstNode.Tag;
-                    string secondLabel = (string)((Grid)canvas.Children.Cast<UIElement>().FirstOrDefault(e => e is Grid && Canvas.GetLeft((Grid)e) == Canvas.GetLeft(weightText))).Tag;
-                    _graphData.AddEdge(firstLabel, secondLabel, newWeight, null, weightText);
+                        string firstLabel = (string)edgeData.Item1.Tag;
+                        string secondLabel = (string)edgeData.Item2.Tag;
+
+                        // Обновление веса в GraphData
+                        _graphData.AddEdge(firstLabel, secondLabel, newWeight, line, clickedTextBlock);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Некорректное значение веса. Введите неотрицательное число.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
                 }
                 else
                 {
-                    MessageBox.Show("Некорректное значение веса. Введите неотрицательное число.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("Не удалось определить связанное ребро.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             };
 
