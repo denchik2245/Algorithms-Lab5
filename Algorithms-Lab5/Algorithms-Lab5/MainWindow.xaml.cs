@@ -15,12 +15,14 @@ namespace Algorithms_Lab5
         public string SelectedEndNode { get; private set; } = null;
         private bool isSelectingStartNode = false;
         private bool isSelectingEndNode = false;
+        private AddDirectedEdge _addDirectedEdge;
         
         public MainWindow()
         {
             InitializeComponent();
             GraphFrame.Content = new PageTask1();
             GraphManager = new GraphManager();
+            
         }
 
         private void MoveButton_Click(object sender, RoutedEventArgs e)
@@ -51,7 +53,17 @@ namespace Algorithms_Lab5
         {
             if (GraphFrame.Content is PageTask1 pageTask1)
             {
-                pageTask1.ActivateAddEdgeMode();
+                if (AlgorithmComboBox.SelectedItem is ComboBoxItem selectedItem)
+                {
+                    if (selectedItem.Content.ToString() == "Транспортная сеть")
+                    {
+                        pageTask1.ActivateAddDirectedEdgeMode();
+                    }
+                    else
+                    {
+                        pageTask1.ActivateAddEdgeMode();
+                    }
+                }
             }
         }
 
@@ -114,6 +126,7 @@ namespace Algorithms_Lab5
         {
             if (GraphFrame.Content is PageTask1 pageTask1)
             {
+                pageTask1.NonActive();
                 string selectedAlgorithm = (AlgorithmComboBox.SelectedItem as ComboBoxItem)?.Content.ToString();
                 if (string.IsNullOrEmpty(selectedAlgorithm))
                 {

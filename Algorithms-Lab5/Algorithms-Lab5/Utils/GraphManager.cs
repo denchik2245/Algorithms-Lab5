@@ -11,6 +11,7 @@ public class GraphManager
     public GraphData GraphData { get; private set; } = new GraphData();
     public AddNode AddNodeTool { get; private set; }
     public AddEdge AddEdgeTool { get; private set; }
+    public AddDirectedEdge AddDirectedEdgeTool { get; private set; }
     public RemoveNode RemoveNodeTool { get; private set; }
     public RemoveEdge RemoveEdgeTool { get; private set; }
 
@@ -18,6 +19,7 @@ public class GraphManager
     {
         AddNodeTool = new AddNode(GraphData);
         AddEdgeTool = new AddEdge(GraphData);
+        AddDirectedEdgeTool = new AddDirectedEdge(GraphData);
         RemoveNodeTool = new RemoveNode(GraphData);
         RemoveEdgeTool = new RemoveEdge(GraphData);
     }

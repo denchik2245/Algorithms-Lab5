@@ -65,6 +65,16 @@ namespace Algorithms_Lab5
             _moveTool.IsActive = false;
         }
 
+        public void ActivateAddDirectedEdgeMode()
+        {
+            _graphManager.AddNodeTool.IsActive = false;
+            _graphManager.RemoveNodeTool.IsActive = false;
+            _graphManager.AddEdgeTool.IsActive = false;
+            _graphManager.AddDirectedEdgeTool.IsActive = true;
+            _graphManager.RemoveEdgeTool.IsActive = false;
+            _moveTool.IsActive = false;
+        }
+        
         // Удалить ребро
         public void ActivateRemoveEdgeMode()
         {
@@ -74,7 +84,16 @@ namespace Algorithms_Lab5
             _graphManager.RemoveEdgeTool.IsActive = true;
             _moveTool.IsActive = false;
         }
-
+        
+        public void NonActive()
+        {
+            _graphManager.AddNodeTool.IsActive = false;
+            _graphManager.RemoveNodeTool.IsActive = false;
+            _graphManager.AddEdgeTool.IsActive = false;
+            _graphManager.RemoveEdgeTool.IsActive = false;
+            _moveTool.IsActive = false;
+        }
+        
         // Загрузить граф
         public void LoadGraph()
         {
@@ -86,38 +105,62 @@ namespace Algorithms_Lab5
         // Обработчик клика по Canvas
         private void MainCanvas_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            // Если активирован режим перемещения узлов
             if (_moveTool.IsActive)
             {
                 _moveTool.StartDrag(e);
             }
+            
+            // Если активирован режим добавления узлов
             else if (_graphManager.AddNodeTool.IsActive)
             {
                 Point clickPosition = e.GetPosition(MainCanvas);
                 _graphManager.AddNodeTool.Add(MainCanvas, clickPosition);
             }
+            
+            // Если активирован режим удаления узлов
             else if (_graphManager.RemoveNodeTool.IsActive)
             {
                 _graphManager.RemoveNodeTool.Remove(MainCanvas, e);
             }
+            
+            // Если активирован режим добавления обычных рёбер  
             else if (_graphManager.AddEdgeTool.IsActive)
             {
                 if (e.OriginalSource is FrameworkElement clickedElement)
                 {
+                    // Вызываем метод для добавления обычного ребра
                     _graphManager.AddEdgeTool.SelectNode(MainCanvas, clickedElement.Parent as UIElement);
                 }
             }
+            
+            // Если активирован режим удаления рёбер
             else if (_graphManager.RemoveEdgeTool.IsActive)
             {
                 _graphManager.RemoveEdgeTool.Remove(MainCanvas, e);
             }
+            
+            // Если активирован режим загрузки графа
             else if (_loadGraphTool.IsActive)
             {
                 _loadGraphTool.Load(MainCanvas);
             }
+            
+            // Если активирован режим добавления направленных рёбер
+            else if (_graphManager.AddDirectedEdgeTool.IsActive)
+            {
+                if (e.OriginalSource is FrameworkElement clickedElement)
+                {
+                    // Вызываем метод для добавления направленного ребра
+                    _graphManager.AddDirectedEdgeTool.SelectNode(MainCanvas, clickedElement.Parent as UIElement);
+                }
+            }
+            
             else if (sender is Grid nodeGrid && nodeGrid.Tag is string nodeLabel)
             {
                 ((MainWindow)Application.Current.MainWindow).SelectNode(nodeLabel);
             }
+            
         }
 
         private void MainCanvas_MouseMove(object sender, MouseEventArgs e)
