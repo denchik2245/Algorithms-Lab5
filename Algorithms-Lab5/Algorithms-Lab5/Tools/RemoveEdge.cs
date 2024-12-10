@@ -32,21 +32,18 @@ namespace Algorithms_Lab5.Tools
 
                     string firstLabel = firstNode.Tag as string;
                     string secondLabel = secondNode.Tag as string;
-
-                    // Удаляем ребро из GraphData
+                    
                     if (firstLabel != null && secondLabel != null)
                     {
                         _graphData.RemoveEdge(firstLabel, secondLabel);
                     }
-
-                    // Удаляем текстовый блок веса
+                    
                     if (weightTextBlock != null)
                     {
                         canvas.Children.Remove(weightTextBlock);
                     }
                 }
-
-                // Удаляем линию (ребро) из Canvas
+                
                 canvas.Children.Remove(edge);
             }
             else

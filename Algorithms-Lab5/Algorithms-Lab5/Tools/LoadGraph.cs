@@ -12,8 +12,7 @@ namespace Algorithms_Lab5.Tools
     {
         private GraphManager _graphManager;
         public bool IsActive { get; set; }
-
-        // Словарь для хранения соответствия индексов узлов их Grid
+        
         private Dictionary<int, Grid> nodeGrids;
 
         public LoadGraph(GraphManager graphManager)
@@ -41,9 +40,6 @@ namespace Algorithms_Lab5.Tools
         private void ParseGraphData(string[] graphData, Canvas canvas)
         {
             canvas.Children.Clear();
-
-            // Очищаем граф и сбрасываем состояние инструментов
-            //_graphManager.GraphData.Clear();
             _graphManager.AddNodeTool.ResetCount();
 
             nodeGrids.Clear();
@@ -109,14 +105,10 @@ namespace Algorithms_Lab5.Tools
                         if (nodeGrids.TryGetValue(i, out Grid firstGrid) && nodeGrids.TryGetValue(j, out Grid secondGrid))
                         {
                             string weight = adjacencyMatrix[i, j].ToString(CultureInfo.InvariantCulture);
-
-                            // Создаём TextBlock для веса
+                            
                             TextBlock weightText = _graphManager.AddEdgeTool.CreateWeightTextBlock(weight, canvas);
-
-                            // Рисуем ребро
                             Line line = _graphManager.AddEdgeTool.DrawEdgeWithWeight(canvas, firstGrid, secondGrid, weightText);
-
-                            // Добавляем ребро в GraphData
+                            
                             string firstLabel = (string)firstGrid.Tag;
                             string secondLabel = (string)secondGrid.Tag;
                             double w = adjacencyMatrix[i, j];

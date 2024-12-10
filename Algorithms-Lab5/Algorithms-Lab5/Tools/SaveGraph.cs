@@ -34,8 +34,8 @@ namespace Algorithms_Lab5.Tools
             {
                 if (element is Grid grid)
                 {
-                    double x = Canvas.GetLeft(grid) + (grid.Width / 2); // Используем фиксированную ширину узла
-                    double y = Canvas.GetTop(grid) + (grid.Height / 2); // Используем фиксированную высоту узла
+                    double x = Canvas.GetLeft(grid) + (grid.Width / 2);
+                    double y = Canvas.GetTop(grid) + (grid.Height / 2);
                     nodes.Add((grid, x, y));
                 }
             }
@@ -46,23 +46,19 @@ namespace Algorithms_Lab5.Tools
         {
             var nodesWithCoordinates = GetNodesWithCoordinates(canvas);
             int nodeCount = nodesWithCoordinates.Count;
-
-            // Матрица размером nodeCount x (nodeCount + 2)
             string[,] matrix = new string[nodeCount, nodeCount + 2];
-
-            // Инициализация весов ребер как "0"
+            
             for (int i = 0; i < nodeCount; i++)
             {
                 for (int j = 0; j < nodeCount; j++)
                 {
                     matrix[i, j] = "0";
                 }
-                // Запись координат X и Y
+               
                 matrix[i, nodeCount] = nodesWithCoordinates[i].X.ToString(CultureInfo.InvariantCulture);
                 matrix[i, nodeCount + 1] = nodesWithCoordinates[i].Y.ToString(CultureInfo.InvariantCulture);
             }
-
-            // Обход всех элементов Canvas для поиска линий (ребер)
+            
             foreach (UIElement element in canvas.Children)
             {
                 if (element is Line line && line.Tag is Tuple<Grid, Grid, TextBlock> connectedNodes)
@@ -70,17 +66,14 @@ namespace Algorithms_Lab5.Tools
                     Grid startNode = connectedNodes.Item1;
                     Grid endNode = connectedNodes.Item2;
                     TextBlock weightText = connectedNodes.Item3;
-
-                    // Извлечение индексов узлов
+                    
                     int startIndex = nodesWithCoordinates.FindIndex(n => n.Node == startNode);
                     int endIndex = nodesWithCoordinates.FindIndex(n => n.Node == endNode);
 
                     if (startIndex != -1 && endIndex != -1)
                     {
-                        // Извлечение веса ребра
                         string weight = weightText.Text.Trim();
-
-                        // Валидация веса
+                        
                         if (double.TryParse(weight, NumberStyles.Float, CultureInfo.InvariantCulture, out double parsedWeight))
                         {
                             if (parsedWeight > 0)
@@ -91,7 +84,6 @@ namespace Algorithms_Lab5.Tools
                         }
                         else
                         {
-                            // Если вес некорректен, оставить "0" и уведомить пользователя
                             MessageBox.Show($"Некорректный вес ребра между узлами {startIndex + 1} и {endIndex + 1}: '{weight}'. Вес не будет сохранён.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
                         }
                     }
@@ -113,7 +105,7 @@ namespace Algorithms_Lab5.Tools
                     var row = new List<string>();
                     for (int j = 0; j < cols; j++)
                     {
-                        row.Add(matrix[i, j] ?? "0"); // Если значение null, заменить на "0"
+                        row.Add(matrix[i, j] ?? "0");
                     }
                     writer.WriteLine(string.Join(";", row));
                 }

@@ -3,7 +3,6 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using Algorithms_Lab5.Utils;
-using GraphEditor;
 
 namespace Algorithms_Lab5.Tools
 {
@@ -23,8 +22,6 @@ namespace Algorithms_Lab5.Tools
             if (!IsActive) return null;
 
             _count++;
-
-            // Используем заданную метку или внутренний счётчик
             string nodeLabel = label ?? _count.ToString();
 
             // Создаём эллипс 70x70
@@ -56,15 +53,12 @@ namespace Algorithms_Lab5.Tools
             };
             container.Children.Add(ellipse);
             container.Children.Add(textBlock);
-
-            // Устанавливаем позицию (центрируем по заданным координатам)
+            
             Canvas.SetLeft(container, position.X - 35);
             Canvas.SetTop(container, position.Y - 35);
-
-            // Присваиваем метку узла в Tag для дальнейшей идентификации
+            
             container.Tag = nodeLabel;
-
-            // Добавляем обработчик клика для взаимодействия с узлом (например, для добавления рёбер)
+            
             container.MouseLeftButtonDown += (sender, args) =>
             {
                 if (Application.Current.MainWindow is MainWindow mainWindow)
@@ -73,11 +67,8 @@ namespace Algorithms_Lab5.Tools
                     mainWindow.SelectStartNode(nodeLabel);
                 }
             };
-
-            // Добавляем узел на Canvas
+            
             canvas.Children.Add(container);
-
-            // Добавляем узел в GraphData, передавая Grid для связи
             _graphData.AddNode(nodeLabel, container);
 
             return container;

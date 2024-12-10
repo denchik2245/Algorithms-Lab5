@@ -3,6 +3,8 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 using Algorithms_Lab5.Utils;
 
+namespace Algorithms_Lab5.Algorithms;
+
 public class MinimumSpanningTree
 {
     private TextBox OutputTextBox;
@@ -38,8 +40,7 @@ public class MinimumSpanningTree
         {
             priorityQueue.Enqueue((selectedStartNode, neighbor, weight), weight);
         }
-
-        // Строим остовное дерево
+        
         while (priorityQueue.Count > 0)
         {
             var (fromNode, toNode, weight) = priorityQueue.Dequeue();

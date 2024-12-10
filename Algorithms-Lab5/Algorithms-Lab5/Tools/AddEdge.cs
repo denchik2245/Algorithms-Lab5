@@ -1,8 +1,6 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 using Algorithms_Lab5.Utils;
@@ -42,11 +40,9 @@ namespace Algorithms_Lab5.Tools
 
                 string firstLabel = (string)_firstNode.Tag;
                 string secondLabel = (string)node.Tag;
-
-                // Создаём TextBlock для отображения веса
+                
                 TextBlock weightText = CreateWeightTextBlock("0", canvas);
-
-                // Рисуем ребро с весом "0" и добавляем в GraphData
+                
                 Line edge = DrawEdgeWithWeight(canvas, _firstNode, node, weightText);
                 _graphData.AddEdge(firstLabel, secondLabel, 0, edge, weightText);
 
@@ -90,8 +86,7 @@ namespace Algorithms_Lab5.Tools
 
             Point startPoint = GetPointOnCircleBorder(firstNodeCenter, secondNodeCenter, nodeRadius);
             Point endPoint = GetPointOnCircleBorder(secondNodeCenter, firstNodeCenter, nodeRadius);
-
-            // Создаём линию для рёбра
+            
             Line edge = new Line
             {
                 X1 = startPoint.X,
@@ -101,19 +96,15 @@ namespace Algorithms_Lab5.Tools
                 Stroke = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2A2D32")),
                 StrokeThickness = 5
             };
-
-            // Устанавливаем Tag у Line для связи с TextBlock и узлами
+            
             edge.Tag = Tuple.Create(firstNode, secondNode, weightText);
 
             double midX = (startPoint.X + endPoint.X) / 2;
             double midY = (startPoint.Y + endPoint.Y) / 2;
             Canvas.SetLeft(weightText, midX);
             Canvas.SetTop(weightText, midY);
-
-            // Привязываем TextBlock к Line
+            
             weightText.Tag = edge;
-
-            // Добавляем элементы на Canvas
             canvas.Children.Add(edge);
             canvas.Children.Add(weightText);
 
@@ -144,8 +135,6 @@ namespace Algorithms_Lab5.Tools
 
                         string firstLabel = (string)edgeData.Item1.Tag;
                         string secondLabel = (string)edgeData.Item2.Tag;
-
-                        // Обновление веса в GraphData
                         _graphData.AddEdge(firstLabel, secondLabel, newWeight, line, clickedTextBlock);
                     }
                     else

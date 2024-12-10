@@ -3,7 +3,7 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 using Algorithms_Lab5.Utils;
 
-namespace Algorithms_Lab5._1task;
+namespace Algorithms_Lab5.Algorithms;
 
 public class DepthFirstSearch
 {
@@ -29,8 +29,7 @@ public class DepthFirstSearch
             if (!visited.Contains(currentNode))
             {
                 visited.Add(currentNode);
-
-                // Подсвечиваем узел
+                
                 var nodeGrid = graphData.GetNodeGrid(currentNode);
                 if (nodeGrid != null)
                     HighlightNode(nodeGrid);
@@ -42,8 +41,7 @@ public class DepthFirstSearch
                     if (!visited.Contains(neighbor))
                     {
                         stack.Push(neighbor);
-
-                        // Подсвечиваем ребро
+                        
                         var edge = graphData.GetEdge(currentNode, neighbor);
                         if (edge != null)
                             HighlightEdge(edge);
@@ -52,7 +50,7 @@ public class DepthFirstSearch
                     }
                 }
 
-                await Task.Delay(1000); // Для визуализации
+                await Task.Delay(1000);
             }
         }
 

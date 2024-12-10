@@ -1,14 +1,10 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Shapes;
-using Algorithms_Lab5;
-using Algorithms_Lab5._1task;
+using Algorithms_Lab5.Algorithms;
 using Algorithms_Lab5.Tools;
 using Algorithms_Lab5.Utils;
 
-namespace GraphEditor
+namespace Algorithms_Lab5
 {
     public partial class MainWindow : Window
     {
@@ -16,7 +12,6 @@ namespace GraphEditor
         public string SelectedStartNode { get; private set; } = null;
         public string SelectedEndNode { get; private set; } = null;
         private bool isSelectingStartNode = false;
-        private bool isSelectingEndNode = false;
         
         public MainWindow()
         {
@@ -236,7 +231,7 @@ namespace GraphEditor
 
                     case "Минимальное остовное дерево":
                         var mst = new MinimumSpanningTree(OutputTextBox);
-                        mst.SetSelectedStartNode(SelectedStartNode); // Передаем выбранный узел
+                        mst.SetSelectedStartNode(SelectedStartNode);
                         await mst.Execute(pageTask1.GraphManager.GraphData);
                         break;
 

@@ -18,15 +18,9 @@ namespace Algorithms_Lab5
         public PageTask1()
         {
             InitializeComponent();
-    
-            // Создаем GraphManager
             _graphManager = new GraphManager();
-
-            // Инициализируем инструмент перемещения
-            _moveTool = new Move(_graphManager.GraphData); // Передаем GraphData в Move
-            _moveTool.Initialize(MainCanvas); // Привязываем Canvas
-
-            // Инициализируем инструмент загрузки графа
+            _moveTool = new Move(_graphManager.GraphData);
+            _moveTool.Initialize(MainCanvas);
             _loadGraphTool = new LoadGraph(_graphManager);
         }
         
@@ -34,20 +28,16 @@ namespace Algorithms_Lab5
         // Перемещение
         public void ActivateMoveMode()
         {
-            // Деактивируем все режимы GraphManager
             _graphManager.AddNodeTool.IsActive = false;
             _graphManager.RemoveNodeTool.IsActive = false;
             _graphManager.AddEdgeTool.IsActive = false;
             _graphManager.RemoveEdgeTool.IsActive = false;
-
-            // Активируем MoveTool
             _moveTool.IsActive = true;
         }
 
         // Добавить узел
         public void ActivateAddNodeMode()
         {
-            // Активируем AddNode, деактивируем остальные из GraphManager и MoveTool
             _graphManager.AddNodeTool.IsActive = true;
             _graphManager.RemoveNodeTool.IsActive = false;
             _graphManager.AddEdgeTool.IsActive = false;
@@ -113,7 +103,6 @@ namespace Algorithms_Lab5
             {
                 if (e.OriginalSource is FrameworkElement clickedElement)
                 {
-                    // Здесь важно, что узел находится в Grid, а Grid.Tag содержит уникальную метку узла
                     _graphManager.AddEdgeTool.SelectNode(MainCanvas, clickedElement.Parent as UIElement);
                 }
             }
@@ -123,7 +112,6 @@ namespace Algorithms_Lab5
             }
             else if (_loadGraphTool.IsActive)
             {
-                // Если вдруг надо загрузить повторно по клику (возможно вы так не делаете, но на всякий случай)
                 _loadGraphTool.Load(MainCanvas);
             }
         }

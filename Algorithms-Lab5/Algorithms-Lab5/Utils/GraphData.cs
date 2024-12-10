@@ -25,9 +25,9 @@ public class  GraphData
             throw new InvalidOperationException("Один из узлов не существует.");
 
         adjacencyList[from][to] = weight;
-        adjacencyList[to][from] = weight; // Для неориентированного графа
+        adjacencyList[to][from] = weight;
         edges[(from, to)] = (line, weightTextBlock);
-        edges[(to, from)] = (line, weightTextBlock); // Для неориентированного графа
+        edges[(to, from)] = (line, weightTextBlock);
     }
 
     public void RemoveNode(string nodeLabel)
@@ -64,7 +64,7 @@ public class  GraphData
             if (canvas != null)
             {
                 canvas.Children.Remove(edge.line);
-                canvas.Children.Remove(edge.weight); // Удаляем текстовый блок веса
+                canvas.Children.Remove(edge.weight);
             }
         }
     }

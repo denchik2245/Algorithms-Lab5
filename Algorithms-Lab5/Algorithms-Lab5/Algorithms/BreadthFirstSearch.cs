@@ -3,7 +3,7 @@ using System.Windows.Media;
 using System.Windows.Shapes;
 using Algorithms_Lab5.Utils;
 
-namespace Algorithms_Lab5._1task;
+namespace Algorithms_Lab5.Algorithms;
 
 public class BreadthFirstSearch
 {
@@ -27,8 +27,7 @@ public class BreadthFirstSearch
         while (queue.Count > 0)
         {
             string currentNode = queue.Dequeue();
-
-            // Подсвечиваем узел
+            
             var nodeGrid = graphData.GetNodeGrid(currentNode);
             if (nodeGrid != null)
                 HighlightNode(nodeGrid);
@@ -41,8 +40,7 @@ public class BreadthFirstSearch
                 {
                     visited.Add(neighbor);
                     queue.Enqueue(neighbor);
-
-                    // Подсвечиваем ребро
+                    
                     var edge = graphData.GetEdge(currentNode, neighbor);
                     if (edge != null)
                         HighlightEdge(edge);
@@ -51,7 +49,7 @@ public class BreadthFirstSearch
                 }
             }
 
-            await Task.Delay(1000); // Для визуализации
+            await Task.Delay(1000);
         }
 
         OutputTextBox.AppendText("Обход в ширину завершён.\n");
