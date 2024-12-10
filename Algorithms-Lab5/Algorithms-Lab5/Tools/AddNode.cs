@@ -59,12 +59,13 @@ namespace Algorithms_Lab5.Tools
             
             container.Tag = nodeLabel;
             
+            // Обновленный обработчик клика
             container.MouseLeftButtonDown += (sender, args) =>
             {
                 if (Application.Current.MainWindow is MainWindow mainWindow)
                 {
                     string nodeLabel = container.Tag.ToString();
-                    mainWindow.SelectStartNode(nodeLabel);
+                    mainWindow.SelectNode(nodeLabel);
                 }
             };
             

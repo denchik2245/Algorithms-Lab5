@@ -1,5 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Shapes;
 using Algorithms_Lab5.Algorithms;
 using Algorithms_Lab5.Tools;
 using Algorithms_Lab5.Utils;
@@ -12,6 +14,7 @@ namespace Algorithms_Lab5
         public string SelectedStartNode { get; private set; } = null;
         public string SelectedEndNode { get; private set; } = null;
         private bool isSelectingStartNode = false;
+        private bool isSelectingEndNode = false;
         
         public MainWindow()
         {
@@ -123,58 +126,36 @@ namespace Algorithms_Lab5
                 switch (selectedAlgorithm)
                 {
                     case "Обход в ширину":
-                        OutputTextBox.AppendText("Выберите начальный узел, кликнув по нему.\n");
-                        isSelectingStartNode = true;
-
-                        while (SelectedStartNode == null)
+                        await SelectStartNodeAndExecute(async (start) =>
                         {
-                            await Task.Delay(100);
-                        }
-
-                        isSelectingStartNode = false;
-
-                        OutputTextBox.AppendText($"Начальный узел выбран: {SelectedStartNode}\n");
-
-                        var bfs = new BreadthFirstSearch(OutputTextBox);
-                        await bfs.Execute(pageTask1.GraphManager.GraphData, SelectedStartNode);
-
+                            var bfs = new BreadthFirstSearch(OutputTextBox);
+                            await bfs.Execute(pageTask1.GraphManager.GraphData, start);
+                        });
                         break;
 
                     case "Обход в глубину":
-                        OutputTextBox.AppendText("Выберите начальный узел, кликнув по нему.\n");
-                        isSelectingStartNode = true;
-
-                        while (SelectedStartNode == null)
+                        await SelectStartNodeAndExecute(async (start) =>
                         {
-                            await Task.Delay(100);
-                        }
-
-                        isSelectingStartNode = false;
-
-                        OutputTextBox.AppendText($"Начальный узел выбран: {SelectedStartNode}\n");
-
-                        var dfs = new DepthFirstSearch(OutputTextBox);
-                        await dfs.Execute(pageTask1.GraphManager.GraphData, SelectedStartNode);
-
+                            var dfs = new DepthFirstSearch(OutputTextBox);
+                            await dfs.Execute(pageTask1.GraphManager.GraphData, start);
+                        });
                         break;
 
                     case "Минимальное остовное дерево":
-                        OutputTextBox.AppendText("Выберите начальный узел, кликнув по нему.\n");
-                        isSelectingStartNode = true;
-
-                        while (SelectedStartNode == null)
+                        await SelectStartNodeAndExecute(async (start) =>
                         {
-                            await Task.Delay(100);
-                        }
+                            var mst = new MinimumSpanningTree(OutputTextBox);
+                            mst.SetSelectedStartNode(start);
+                            await mst.Execute(pageTask1.GraphManager.GraphData);
+                        });
+                        break;
 
-                        isSelectingStartNode = false;
-
-                        OutputTextBox.AppendText($"Начальный узел выбран: {SelectedStartNode}\n");
-
-                        var mst = new MinimumSpanningTree(OutputTextBox);
-                        mst.SetSelectedStartNode(SelectedStartNode);
-                        await mst.Execute(pageTask1.GraphManager.GraphData);
-
+                    case "Кратчайший путь":
+                        await SelectStartAndEndNodesAndExecute(async (start, end) =>
+                        {
+                            var shortestPath = new DijkstraShortestPath(OutputTextBox);
+                            await shortestPath.Execute(pageTask1.GraphManager.GraphData, start, end);
+                        });
                         break;
 
                     default:
@@ -183,7 +164,6 @@ namespace Algorithms_Lab5
                 }
                 
                 SelectedStartNode = null;
-                SelectedEndNode = null;
             }
             else
             {
@@ -191,61 +171,66 @@ namespace Algorithms_Lab5
             }
         }
         
-        //Выбрать стартовый узел
-        public void SelectStartNode(string nodeLabel)
+        private async Task SelectStartNodeAndExecute(Func<string, Task> action)
         {
-            if (!isSelectingStartNode) return;
-            SelectedStartNode = nodeLabel;
-            var nodeGrid = GraphManager.GraphData.GetNodeGrid(nodeLabel);
-            OutputTextBox.AppendText($"Выбран узел {nodeLabel} в качестве начального.\n");
-            
+            OutputTextBox.AppendText("Выберите начальный узел, кликнув по нему.\n");
+            isSelectingStartNode = true;
+
+            while (SelectedStartNode == null)
+            {
+                await Task.Delay(100);
+            }
+
             isSelectingStartNode = false;
-            RunSelectedAlgorithm();
+            OutputTextBox.AppendText($"Начальный узел выбран: {SelectedStartNode}\n");
+
+            await action(SelectedStartNode);
         }
         
-        //Запустить выбранный алгоритм
-        private async void RunSelectedAlgorithm()
+        // Метод для выбора начального и конечного узлов и выполнения действия
+        private async Task SelectStartAndEndNodesAndExecute(Func<string, string, Task> action)
         {
-            if (SelectedStartNode == null)
+            OutputTextBox.AppendText("Выберите начальный узел, кликнув по нему.\n");
+            isSelectingStartNode = true;
+
+            while (SelectedStartNode == null)
             {
-                MessageBox.Show("Начальный узел не выбран.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
+                await Task.Delay(100);
             }
 
-            if (GraphFrame.Content is PageTask1 pageTask1)
+            isSelectingStartNode = false;
+            OutputTextBox.AppendText($"Начальный узел выбран: {SelectedStartNode}\n");
+            
+            OutputTextBox.AppendText("Выберите конечный узел, кликнув по нему.\n");
+            isSelectingEndNode = true;
+
+            while (SelectedEndNode == null)
             {
-                string selectedAlgorithm = (AlgorithmComboBox.SelectedItem as ComboBoxItem)?.Content.ToString();
-                OutputTextBox.Clear();
-
-                switch (selectedAlgorithm)
-                {
-                    case "Обход в ширину":
-                        var bfs = new BreadthFirstSearch(OutputTextBox);
-                        await bfs.Execute(pageTask1.GraphManager.GraphData, SelectedStartNode);
-                        break;
-
-                    case "Обход в глубину":
-                        var dfs = new DepthFirstSearch(OutputTextBox);
-                        await dfs.Execute(pageTask1.GraphManager.GraphData, SelectedStartNode);
-                        break;
-
-                    case "Минимальное остовное дерево":
-                        var mst = new MinimumSpanningTree(OutputTextBox);
-                        mst.SetSelectedStartNode(SelectedStartNode);
-                        await mst.Execute(pageTask1.GraphManager.GraphData);
-                        break;
-
-                    default:
-                        OutputTextBox.AppendText("Выбранный алгоритм пока не реализован.\n");
-                        break;
-                }
+                await Task.Delay(100);
             }
-            else
-            {
-                MessageBox.Show("Граф отсутствует на текущей странице.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
+
+            isSelectingEndNode = false;
+            OutputTextBox.AppendText($"Конечный узел выбран: {SelectedEndNode}\n");
+            
+            await action(SelectedStartNode, SelectedEndNode);
         }
         
-
+        public void SelectNode(string nodeLabel)
+        {
+            if (isSelectingStartNode)
+            {
+                SelectedStartNode = nodeLabel;
+                var nodeGrid = GraphManager.GraphData.GetNodeGrid(nodeLabel);
+                OutputTextBox.AppendText($"Выбран узел {nodeLabel} в качестве начального.\n");
+                isSelectingStartNode = false;
+            }
+            else if (isSelectingEndNode)
+            {
+                SelectedEndNode = nodeLabel;
+                var nodeGrid = GraphManager.GraphData.GetNodeGrid(nodeLabel);
+                OutputTextBox.AppendText($"Выбран узел {nodeLabel} в качестве конечного.\n");
+                isSelectingEndNode = false;
+            }
+        }
     }
 }

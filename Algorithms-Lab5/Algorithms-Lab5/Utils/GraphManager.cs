@@ -21,6 +21,4 @@ public class GraphManager
         RemoveNodeTool = new RemoveNode(GraphData);
         RemoveEdgeTool = new RemoveEdge(GraphData);
     }
-
-    // Методы для управления графом
 }

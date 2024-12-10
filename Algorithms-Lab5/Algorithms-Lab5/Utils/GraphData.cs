@@ -1,4 +1,6 @@
-﻿using System.Windows.Controls;
+﻿using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Shapes;
 
@@ -16,6 +18,17 @@ public class  GraphData
         {
             adjacencyList[nodeLabel] = new Dictionary<string, double>();
             nodeGrids[nodeLabel] = grid;
+
+            grid.Tag = nodeLabel;
+            grid.MouseLeftButtonDown += NodeGrid_MouseLeftButtonDown;
+        }
+    }
+    
+    private void NodeGrid_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is Grid nodeGrid && nodeGrid.Tag is string nodeLabel)
+        {
+            ((MainWindow)Application.Current.MainWindow).SelectNode(nodeLabel);
         }
     }
 

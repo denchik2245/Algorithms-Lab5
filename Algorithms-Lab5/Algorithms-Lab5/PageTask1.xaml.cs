@@ -114,6 +114,10 @@ namespace Algorithms_Lab5
             {
                 _loadGraphTool.Load(MainCanvas);
             }
+            else if (sender is Grid nodeGrid && nodeGrid.Tag is string nodeLabel)
+            {
+                ((MainWindow)Application.Current.MainWindow).SelectNode(nodeLabel);
+            }
         }
 
         private void MainCanvas_MouseMove(object sender, MouseEventArgs e)
