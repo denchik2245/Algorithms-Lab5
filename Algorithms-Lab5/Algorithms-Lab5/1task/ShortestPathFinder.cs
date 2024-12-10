@@ -3,6 +3,8 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
 
+namespace Algorithms_Lab5._1task;
+
 public class ShortestPathFinder
 {
     private Canvas _canvas;

@@ -4,7 +4,7 @@ using System.Windows.Shapes;
 
 namespace Algorithms_Lab5.Utils;
 
-public class GraphData
+public class  GraphData
 {
     private Dictionary<string, Dictionary<string, double>> adjacencyList = new();
     private Dictionary<string, Grid> nodeGrids = new();
