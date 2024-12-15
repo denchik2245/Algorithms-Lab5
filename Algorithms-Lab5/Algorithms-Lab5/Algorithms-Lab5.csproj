@@ -26,6 +26,8 @@
       <Resource Include="Resources\upload.svg" />
       <None Remove="Resources\clear.svg" />
       <Resource Include="Resources\clear.svg" />
+      <None Remove="Resources\ConnectionWithDirection.svg" />
+      <Resource Include="Resources\ConnectionDirection.svg" />
     </ItemGroup>
 
     <ItemGroup>

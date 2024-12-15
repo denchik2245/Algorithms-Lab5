@@ -40,7 +40,7 @@ public class AddDirectedEdge
             Point secondNodeCenter = GetNodeCenter(node);
 
             const double nodeRadius = 35;
-            
+
             Point startPoint = GetPointOnCircleBorder(firstNodeCenter, secondNodeCenter, nodeRadius);
             Point endPoint = GetPointOnCircleBorder(secondNodeCenter, firstNodeCenter, nodeRadius);
 
@@ -49,10 +49,10 @@ public class AddDirectedEdge
 
             TextBlock weightText = CreateWeightTextBlock("0", canvas);
             
-            // Передаем флаг isDirected в метод рисования ребра
             Line edge = DrawEdgeWithWeight(canvas, _firstNode, node, weightText, isDirected: _isTransportNetworkMode);
+
             _graphData.AddEdge(firstLabel, secondLabel, 0, edge, weightText);
-            
+
             _firstNode = null;
             _isSelectingFirstNode = true;
         }
@@ -62,8 +62,8 @@ public class AddDirectedEdge
     {
         double left = Canvas.GetLeft(node);
         double top = Canvas.GetTop(node);
-        double centerX = left + 35;
-        double centerY = top + 35;
+        double centerX = left + node.ActualWidth / 2;
+        double centerY = top + node.ActualHeight / 2;
         return new Point(centerX, centerY);
     }
 
@@ -93,7 +93,7 @@ public class AddDirectedEdge
         
         Point startPoint = GetPointOnCircleBorder(firstNodeCenter, secondNodeCenter, nodeRadius);
         Point endPoint = GetPointOnCircleBorder(secondNodeCenter, firstNodeCenter, nodeRadius);
-
+        
         Line edge = new Line
         {
             X1 = startPoint.X,
@@ -103,43 +103,58 @@ public class AddDirectedEdge
             Stroke = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2A2D32")),
             StrokeThickness = 5
         };
+
+        Polyline arrow = null;
         
         if (isDirected)
         {
-            DrawArrow(edge, startPoint, endPoint);
+            arrow = DrawArrow(canvas, edge, startPoint, endPoint);
+            arrow.Tag = edge;
         }
-
-        edge.Tag = Tuple.Create(firstNode, secondNode, weightText);
-
+        
+        edge.Tag = Tuple.Create(firstNode, secondNode, weightText, arrow);
+        
         double midX = (startPoint.X + endPoint.X) / 2;
         double midY = (startPoint.Y + endPoint.Y) / 2;
-        Canvas.SetLeft(weightText, midX);
-        Canvas.SetTop(weightText, midY);
+        Canvas.SetLeft(weightText, midX - weightText.ActualWidth / 2);
+        Canvas.SetTop(weightText, midY - weightText.ActualHeight / 2);
 
         weightText.Tag = edge;
+        
         canvas.Children.Add(edge);
+        if (arrow != null)
+        {
+            canvas.Children.Add(arrow);
+        }
         canvas.Children.Add(weightText);
 
         return edge;
     }
 
-    private void DrawArrow(Line edge, Point start, Point end)
+    private Polyline DrawArrow(Canvas canvas, Line edge, Point start, Point end)
     {
-        const double arrowSize = 10;
+        const double arrowSize = 20;
         double angle = Math.Atan2(end.Y - start.Y, end.X - start.X);
-
-        Point arrowPoint1 = new Point(end.X - arrowSize * Math.Cos(angle - Math.PI / 6), end.Y - arrowSize * Math.Sin(angle - Math.PI / 6));
-        Point arrowPoint2 = new Point(end.X - arrowSize * Math.Cos(angle + Math.PI / 6), end.Y - arrowSize * Math.Sin(angle + Math.PI / 6));
-
+        
+        Point arrowBase = new Point(
+            end.X - arrowSize * Math.Cos(angle),
+            end.Y - arrowSize * Math.Sin(angle)
+        );
+        
+        Point arrowPoint1 = new Point(arrowBase.X - arrowSize * Math.Cos(angle - Math.PI / 6),
+            arrowBase.Y - arrowSize * Math.Sin(angle - Math.PI / 6));
+        Point arrowPoint2 = new Point(arrowBase.X - arrowSize * Math.Cos(angle + Math.PI / 6),
+            arrowBase.Y - arrowSize * Math.Sin(angle + Math.PI / 6));
+        
         Polyline arrow = new Polyline
         {
             Points = new PointCollection { end, arrowPoint1, arrowPoint2 },
             Stroke = edge.Stroke,
-            StrokeThickness = edge.StrokeThickness
+            StrokeThickness = edge.StrokeThickness,
+            Fill = edge.Stroke
         };
-        
-        var parentCanvas = VisualTreeHelper.GetParent(edge) as Canvas;
-        parentCanvas?.Children.Add(arrow);
+
+        return arrow;
     }
 
     public TextBlock CreateWeightTextBlock(string weight, Canvas canvas)
@@ -157,20 +172,46 @@ public class AddDirectedEdge
 
         weightText.MouseLeftButtonDown += (sender, args) =>
         {
-            if (sender is TextBlock clickedTextBlock && clickedTextBlock.Tag is Line line && line.Tag is Tuple<Grid, Grid, TextBlock> edgeData)
+            if (sender is TextBlock clickedTextBlock && clickedTextBlock.Tag is Line line)
             {
-                string input = Microsoft.VisualBasic.Interaction.InputBox("Введите новый вес ребра:", "Изменить вес", clickedTextBlock.Text);
-                if (double.TryParse(input, out double newWeight) && newWeight >= 0)
+                // Проверяем сначала направленные ребра (4 элемента в кортеже)
+                if (line.Tag is Tuple<Grid, Grid, TextBlock, Polyline> directedEdgeData)
                 {
-                    clickedTextBlock.Text = newWeight.ToString(CultureInfo.InvariantCulture);
+                    var (firstNode, secondNode, textBlock, arrow) = directedEdgeData;
+                    string input = Microsoft.VisualBasic.Interaction.InputBox("Введите новый вес ребра:", "Изменить вес", clickedTextBlock.Text);
+                    if (double.TryParse(input, out double newWeight) && newWeight >= 0)
+                    {
+                        clickedTextBlock.Text = newWeight.ToString(CultureInfo.InvariantCulture);
 
-                    string firstLabel = (string)edgeData.Item1.Tag;
-                    string secondLabel = (string)edgeData.Item2.Tag;
-                    _graphData.AddEdge(firstLabel, secondLabel, newWeight, line, clickedTextBlock);
+                        string firstLabel = (string)firstNode.Tag;
+                        string secondLabel = (string)secondNode.Tag;
+                        _graphData.AddEdge(firstLabel, secondLabel, newWeight, line, clickedTextBlock);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Некорректное значение веса. Введите неотрицательное число.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+                else if (line.Tag is Tuple<Grid, Grid, TextBlock> undirectedEdgeData)
+                {
+                    var (firstNode, secondNode, textBlock) = undirectedEdgeData;
+                    string input = Microsoft.VisualBasic.Interaction.InputBox("Введите новый вес ребра:", "Изменить вес", clickedTextBlock.Text);
+                    if (double.TryParse(input, out double newWeight) && newWeight >= 0)
+                    {
+                        clickedTextBlock.Text = newWeight.ToString(CultureInfo.InvariantCulture);
+
+                        string firstLabel = (string)firstNode.Tag;
+                        string secondLabel = (string)secondNode.Tag;
+                        _graphData.AddEdge(firstLabel, secondLabel, newWeight, line, clickedTextBlock);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Некорректное значение веса. Введите неотрицательное число.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
                 }
                 else
                 {
-                    MessageBox.Show("Некорректное значение веса. Введите неотрицательное число.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("Не удалось определить связанное ребро.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
             else

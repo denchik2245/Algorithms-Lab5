@@ -128,7 +128,15 @@
                     <Button Name="AddEdgeButton" Style="{StaticResource IconButtonStyle}" 
                             Tag="pack://application:,,,/Resources/connection.svg" 
                             Content="Добавить ребро" 
-                            Click="AddEdgeButton_Click"/>
+                            Click="AddEdgeButton_Click" 
+                            Visibility="Visible"/>
+
+                    <!-- Кнопка "Добавить направленное ребро" -->
+                    <Button Name="AddDirectedEdgeButton" Style="{StaticResource IconButtonStyle}" 
+                            Tag="pack://application:,,,/Resources/ConnectionDirection.svg" 
+                            Content="Добавить ребро"
+                            Click="AddDirectedEdgeButton_Click" 
+                            Visibility="Collapsed"/>
 
                     <!-- Кнопка "Удалить ребро" -->
                     <Button Name="DeleteEdgeButton" Style="{StaticResource IconButtonStyle}" 
@@ -185,7 +193,8 @@
                           Margin="0,0,0,10" 
                           FontSize="14"
                           HorizontalAlignment="Stretch"
-                          SelectedIndex="0">
+                          SelectedIndex="0"
+                          SelectionChanged="AlgorithmComboBox_SelectionChanged">
                     <ComboBoxItem Content="Обход в ширину"/>
                     <ComboBoxItem Content="Обход в глубину"/>
                     <ComboBoxItem Content="Транспортная сеть"/>

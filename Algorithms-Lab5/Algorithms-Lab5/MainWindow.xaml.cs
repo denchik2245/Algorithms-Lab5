@@ -1,7 +1,5 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
-using System.Windows.Shapes;
 using Algorithms_Lab5.Algorithms;
 using Algorithms_Lab5.Tools;
 using Algorithms_Lab5.Utils;
@@ -53,20 +51,18 @@ namespace Algorithms_Lab5
         {
             if (GraphFrame.Content is PageTask1 pageTask1)
             {
-                if (AlgorithmComboBox.SelectedItem is ComboBoxItem selectedItem)
-                {
-                    if (selectedItem.Content.ToString() == "Транспортная сеть")
-                    {
-                        pageTask1.ActivateAddDirectedEdgeMode();
-                    }
-                    else
-                    {
-                        pageTask1.ActivateAddEdgeMode();
-                    }
-                }
+                pageTask1.ActivateAddEdgeMode();
             }
         }
 
+        private void AddDirectedEdgeButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (GraphFrame.Content is PageTask1 pageTask1)
+            {
+                pageTask1.ActivateAddDirectedEdgeMode();
+            }
+        }
+        
         private void DeleteEdgeButton_Click(object sender, RoutedEventArgs e)
         {
             if (GraphFrame.Content is PageTask1 pageTask1)
@@ -121,6 +117,30 @@ namespace Algorithms_Lab5
             }
         }
         
+        private void AlgorithmComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (AlgorithmComboBox.SelectedItem is ComboBoxItem selectedItem)
+            {
+                string selectedAlgorithm = selectedItem.Content.ToString();
+
+                if (GraphFrame.Content is PageTask1 pageTask1)
+                {
+                    if (selectedAlgorithm == "Транспортная сеть")
+                    {
+                        AddEdgeButton.Visibility = Visibility.Collapsed;
+                        AddDirectedEdgeButton.Visibility = Visibility.Visible;
+                        pageTask1.GraphManager.AddDirectedEdgeTool.SetTransportNetworkMode(true);
+                    }
+                    else
+                    {
+                        AddEdgeButton.Visibility = Visibility.Visible;
+                        AddDirectedEdgeButton.Visibility = Visibility.Collapsed;
+                        pageTask1.GraphManager.AddDirectedEdgeTool.SetTransportNetworkMode(false);
+                    }
+                }
+            }
+        }
+        
         //Кнопка "Выполнить"
         private async void ExecuteButton_Click(object sender, RoutedEventArgs e)
         {
@@ -171,6 +191,14 @@ namespace Algorithms_Lab5
                         });
                         break;
 
+                    case "Транспортная сеть":
+                        await SelectStartAndEndNodesAndExecute(async (start, end) =>
+                        {
+                            var ff = new FordFulkerson(OutputTextBox);
+                            await ff.Execute(pageTask1.GraphManager.GraphData, start, end);
+                        });
+                        break;
+                    
                     default:
                         OutputTextBox.AppendText("Выбранный алгоритм пока не реализован.\n");
                         break;

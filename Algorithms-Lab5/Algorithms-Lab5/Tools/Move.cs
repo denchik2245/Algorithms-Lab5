@@ -91,15 +91,15 @@ namespace Algorithms_Lab5.Tools
             {
                 if (element is Line line)
                 {
-                    if (line.Tag is Tuple<Grid, Grid, TextBlock> connectedNodes)
+                    // Проверяем тип хранящегося в Tag кортежа
+                    if (line.Tag is Tuple<Grid, Grid, TextBlock, Polyline> connectedNodesWithArrow)
                     {
-                        Grid startNode = connectedNodes.Item1;
-                        Grid endNode = connectedNodes.Item2;
-                        
+                        var (startNode, endNode, weightTextBlock, arrow) = connectedNodesWithArrow;
+
                         if (startNode == node || endNode == node)
                         {
+                            // Обновляем координаты линии
                             double offset = 5;
-
                             if (startNode == node)
                             {
                                 line.X1 = newCenterX + offset;
@@ -111,15 +111,77 @@ namespace Algorithms_Lab5.Tools
                                 line.X2 = newCenterX + offset;
                                 line.Y2 = newCenterY + offset;
                             }
-                            
-                            TextBlock weightTextBlock = connectedNodes.Item3;
+
+                            // Обновляем позицию текста веса
                             Canvas.SetLeft(weightTextBlock, (line.X1 + line.X2) / 2 - weightTextBlock.ActualWidth / 2);
                             Canvas.SetTop(weightTextBlock, (line.Y1 + line.Y2) / 2 - weightTextBlock.ActualHeight / 2);
+
+                            // Обновляем стрелку
+                            UpdateArrow(line, arrow);
+                        }
+                    }
+                    else if (line.Tag is Tuple<Grid, Grid, TextBlock> connectedNodesWithoutArrow)
+                    {
+                        var (startNode, endNode, weightTextBlock) = connectedNodesWithoutArrow;
+
+                        if (startNode == node || endNode == node)
+                        {
+                            // Обновляем координаты линии
+                            double offset = 5;
+                            if (startNode == node)
+                            {
+                                line.X1 = newCenterX + offset;
+                                line.Y1 = newCenterY + offset;
+                            }
+
+                            if (endNode == node)
+                            {
+                                line.X2 = newCenterX + offset;
+                                line.Y2 = newCenterY + offset;
+                            }
+
+                            // Обновляем позицию текста веса
+                            Canvas.SetLeft(weightTextBlock, (line.X1 + line.X2) / 2 - weightTextBlock.ActualWidth / 2);
+                            Canvas.SetTop(weightTextBlock, (line.Y1 + line.Y2) / 2 - weightTextBlock.ActualHeight / 2);
+
+                            // У ненаправленных ребер стрелки нет, поэтому просто обновляем линию и текст.
                         }
                     }
                 }
             }
         }
-    }
 
+        private void UpdateArrow(Line line, Polyline arrow)
+        {
+            if (arrow == null) return;
+
+            Point start = new Point(line.X1, line.Y1);
+            Point end = new Point(line.X2, line.Y2);
+
+            const double arrowSize = 20; // Длина стрелки
+            double angle = Math.Atan2(end.Y - start.Y, end.X - start.X);
+
+            // Вычисляем базу стрелки на границе линии
+            Point arrowBase = new Point(
+                end.X - arrowSize * Math.Cos(angle),
+                end.Y - arrowSize * Math.Sin(angle)
+            );
+
+            // Рассчитываем боковые точки стрелки
+            Point arrowPoint1 = new Point(
+                arrowBase.X - arrowSize * Math.Cos(angle - Math.PI / 6),
+                arrowBase.Y - arrowSize * Math.Sin(angle - Math.PI / 6)
+            );
+            Point arrowPoint2 = new Point(
+                arrowBase.X - arrowSize * Math.Cos(angle + Math.PI / 6),
+                arrowBase.Y - arrowSize * Math.Sin(angle + Math.PI / 6)
+            );
+
+            // Обновляем координаты стрелки
+            arrow.Points.Clear();
+            arrow.Points.Add(end);
+            arrow.Points.Add(arrowPoint1);
+            arrow.Points.Add(arrowPoint2);
+        }
+    }
 }
