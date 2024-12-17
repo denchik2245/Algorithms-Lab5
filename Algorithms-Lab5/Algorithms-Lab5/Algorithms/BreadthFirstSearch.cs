@@ -18,41 +18,59 @@ public class BreadthFirstSearch
     {
         var visited = new HashSet<string>();
         var queue = new Queue<string>();
+        var orderOfVisit = new List<string>();
 
         queue.Enqueue(startNodeLabel);
         visited.Add(startNodeLabel);
-
-        OutputTextBox.AppendText($"Начинаем обход в ширину с узла {startNodeLabel}.\n");
+        orderOfVisit.Add(startNodeLabel);
 
         while (queue.Count > 0)
         {
             string currentNode = queue.Dequeue();
-            
+
             var nodeGrid = graphData.GetNodeGrid(currentNode);
             if (nodeGrid != null)
                 HighlightNode(nodeGrid);
 
-            OutputTextBox.AppendText($"Посещаем узел {currentNode}.\n");
+            OutputTextBox.AppendText("\n");
+            OutputTextBox.AppendText($"Берём {currentNode} из очереди.\n");
+
+            var neighborsToAdd = new List<string>();
 
             foreach (var (neighbor, weight) in graphData.GetNeighbors(currentNode))
             {
                 if (!visited.Contains(neighbor))
                 {
                     visited.Add(neighbor);
-                    queue.Enqueue(neighbor);
-                    
+                    neighborsToAdd.Add(neighbor);
+
                     var edge = graphData.GetEdge(currentNode, neighbor);
                     if (edge != null)
                         HighlightEdge(edge);
-
-                    OutputTextBox.AppendText($"Добавляем узел {neighbor} в очередь. Ребро ({currentNode} -> {neighbor}) подсвечено.\n");
                 }
+            }
+
+            if (neighborsToAdd.Count > 0)
+            {
+                OutputTextBox.AppendText($"Добавляем соседей {string.Join(", ", neighborsToAdd)} в очередь.\n");
+                foreach (var neighbor in neighborsToAdd)
+                {
+                    queue.Enqueue(neighbor);
+                    orderOfVisit.Add(neighbor);
+                }
+
+                OutputTextBox.AppendText($"Очередь: [{string.Join(", ", queue)}]\n");
+            }
+            else
+            {
+                OutputTextBox.AppendText($"У узла {currentNode} нет соседей.\n");
             }
 
             await Task.Delay(1000);
         }
 
-        OutputTextBox.AppendText("Обход в ширину завершён.\n");
+        OutputTextBox.AppendText("\nИтоговый порядок обхода: ");
+        OutputTextBox.AppendText(string.Join(", ", orderOfVisit) + "\n");
     }
 
     private void HighlightNode(Grid node)

@@ -18,9 +18,10 @@ public class DepthFirstSearch
     {
         var visited = new HashSet<string>();
         var stack = new Stack<string>();
+        var traversalOrder = new List<string>();
 
         stack.Push(startNodeLabel);
-        OutputTextBox.AppendText($"Начинаем обход в глубину с узла {startNodeLabel}.\n");
+        OutputTextBox.AppendText($"Стек: [{startNodeLabel}]\n");
 
         while (stack.Count > 0)
         {
@@ -29,32 +30,51 @@ public class DepthFirstSearch
             if (!visited.Contains(currentNode))
             {
                 visited.Add(currentNode);
-                
+                traversalOrder.Add(currentNode);
+
+                OutputTextBox.AppendText($"Стек: [{string.Join(", ", stack.Reverse())}]\n");
+
                 var nodeGrid = graphData.GetNodeGrid(currentNode);
                 if (nodeGrid != null)
                     HighlightNode(nodeGrid);
 
-                OutputTextBox.AppendText($"Посещаем узел {currentNode}.\n");
+                var neighbors = graphData.GetNeighbors(currentNode)
+                                          .Where(n => !visited.Contains(n.Item1))
+                                          .Select(n => n.Item1)
+                                          .ToList();
 
-                foreach (var (neighbor, weight) in graphData.GetNeighbors(currentNode))
+                if (neighbors.Count > 0)
                 {
-                    if (!visited.Contains(neighbor))
+                    OutputTextBox.AppendText($"Смотрим на соседей {currentNode} — это {string.Join(", ", neighbors)}.\n");
+
+                    foreach (var neighbor in neighbors)
                     {
                         stack.Push(neighbor);
-                        
                         var edge = graphData.GetEdge(currentNode, neighbor);
                         if (edge != null)
                             HighlightEdge(edge);
-
-                        OutputTextBox.AppendText($"Добавляем узел {neighbor} в стек. Ребро ({currentNode} -> {neighbor}) подсвечено.\n");
                     }
+
+                    OutputTextBox.AppendText($"Добавляем их в стек. Стек: [{string.Join(", ", stack.Reverse())}]\n");
+                }
+                else
+                {
+                    OutputTextBox.AppendText($"У {currentNode} нет соседей.\n");
                 }
 
                 await Task.Delay(1000);
             }
+
+            if (stack.Count > 0)
+            {
+                string nextNode = stack.Peek();
+                OutputTextBox.AppendText($"\nБерём {nextNode}\n");
+            }
         }
 
-        OutputTextBox.AppendText("Обход в глубину завершён.\n");
+        OutputTextBox.AppendText($"Стек пуст, обход завершён.\n");
+
+        OutputTextBox.AppendText($"Итоговый порядок обхода: {string.Join(", ", traversalOrder)}\n");
     }
 
     private void HighlightNode(Grid node)
