@@ -7,6 +7,7 @@ public class FordFulkerson
 {
     private TextBox OutputTextBox;
     private Dictionary<string, Dictionary<string, double>> residualCapacity;
+    private Dictionary<string, Brush> originalNodeColors = new Dictionary<string, Brush>();
 
     public FordFulkerson(TextBox outputTextBox)
     {
@@ -15,25 +16,21 @@ public class FordFulkerson
 
     public async Task<double> Execute(GraphData graphData, string source, string sink)
     {
-        // Инициализация резидуальной сети
         InitializeResidualNetwork(graphData);
 
         double maxFlow = 0;
 
-        OutputTextBox.AppendText($"Поиск максимального потока из {source} в {sink}.\n");
+        OutputTextBox.AppendText($"\nНачинаем поиск максимального потока из {source} в {sink}.\n");
 
-        // Пока существует увеличивающий поток путь
         while (true)
         {
-            // Ищем путь в резидуальной сети из source в sink
             var parent = await FindAugmentingPath(graphData, source, sink);
             if (parent == null)
             {
-                // Путь не найден
+                OutputTextBox.AppendText("Дополняющий путь не найден. Завершаем алгоритм.\n\n");
                 break;
             }
 
-            // Находим минимальную пропускную способность на найденном пути
             double pathFlow = double.PositiveInfinity;
             string v = sink;
             while (v != source)
@@ -43,7 +40,6 @@ public class FordFulkerson
                 v = u;
             }
 
-            // Обновляем резидуальные ёмкости
             v = sink;
             var augmentingPath = new List<string>();
             while (v != source)
@@ -61,12 +57,13 @@ public class FordFulkerson
 
             maxFlow += pathFlow;
 
-            OutputTextBox.AppendText($"Найден дополняющий путь: {string.Join(" -> ", augmentingPath)} с потоком {pathFlow}.\n");
-            HighlightPath(augmentingPath, graphData, Colors.Orange);
+            OutputTextBox.AppendText($"Найден дополняющий путь: {string.Join(" -> ", augmentingPath)} с потоком {pathFlow}.\n\n");
+            OutputTextBox.AppendText("Обновляем остаточные мощности.\n\n");
+            HighlightPath(augmentingPath, graphData, Colors.Red);
             await Task.Delay(1000);
         }
 
-        OutputTextBox.AppendText($"Максимальный поток: {maxFlow}\n");
+        OutputTextBox.AppendText($"Максимальный поток из {source} в {sink} составляет {maxFlow}.\n");
         return maxFlow;
     }
 
@@ -79,15 +76,25 @@ public class FordFulkerson
             residualCapacity[node] = new Dictionary<string, double>();
             foreach (var (neighbor, capacity) in graphData.GetNeighbors(node))
             {
-                // Инициализируем резидуальную ёмкость равной пропускной способности исходного ребра
                 residualCapacity[node][neighbor] = capacity;
+            }
+
+            var nodeGrid = graphData.GetNodeGrid(node);
+            if (nodeGrid != null && nodeGrid.Children[0] is Ellipse ellipse)
+            {
+                // Сохраняем оригинальный цвет узла
+                if (!originalNodeColors.ContainsKey(node))
+                {
+                    originalNodeColors[node] = ellipse.Fill;
+                }
             }
         }
     }
 
     private async Task<Dictionary<string, string>> FindAugmentingPath(GraphData graphData, string source, string sink)
     {
-        // Поиск в ширину по резидуальной сети
+        ResetHighlights(graphData);
+
         var queue = new Queue<string>();
         var visited = new HashSet<string>();
         var parent = new Dictionary<string, string>();
@@ -95,14 +102,15 @@ public class FordFulkerson
         queue.Enqueue(source);
         visited.Add(source);
 
-        OutputTextBox.AppendText($"Поиск дополняющего пути из {source} в {sink}\n");
+        OutputTextBox.AppendText($"Ищем дополняющий путь из {source} в {sink}.\n");
 
         while (queue.Count > 0)
         {
             string u = queue.Dequeue();
-            OutputTextBox.AppendText($"Обработка узла {u}\n");
+            OutputTextBox.AppendText($"Обрабатываем узел {u}.\n");
+
             var uGrid = graphData.GetNodeGrid(u);
-            if (uGrid != null) HighlightNode(uGrid, Colors.Yellow);
+            if (uGrid != null) HighlightNode(uGrid, Colors.DarkOrange);
             await Task.Delay(500);
 
             foreach (var vPair in residualCapacity[u])
@@ -115,16 +123,14 @@ public class FordFulkerson
                     visited.Add(v);
                     parent[v] = u;
 
-                    // Подсветка ребра (u, v)
                     var edge = graphData.GetEdge(u, v);
-                    if (edge != null) HighlightEdge(edge, Colors.Yellow);
+                    if (edge != null) HighlightEdge(edge, Colors.DarkOrange);
 
                     await Task.Delay(500);
 
                     if (v == sink)
                     {
-                        // Цель достигнута
-                        OutputTextBox.AppendText("Найден путь до стока.\n");
+                        OutputTextBox.AppendText($"Найден путь до стока {sink}.\n");
                         return parent;
                     }
 
@@ -137,14 +143,40 @@ public class FordFulkerson
         return null;
     }
 
-    // Подсветка рёбер
+    private void ResetHighlights(GraphData graphData)
+    {
+        foreach (var node in graphData.Nodes)
+        {
+            var nodeGrid = graphData.GetNodeGrid(node);
+            if (nodeGrid != null && nodeGrid.Children[0] is Ellipse ellipse)
+            {
+                if (originalNodeColors.ContainsKey(node))
+                {
+                    ellipse.Fill = originalNodeColors[node];
+                }
+            }
+        }
+
+        foreach (var node in graphData.Nodes)
+        {
+            foreach (var (neighbor, _) in graphData.GetNeighbors(node))
+            {
+                var edge = graphData.GetEdge(node, neighbor);
+                if (edge != null)
+                {
+                    edge.Stroke = new SolidColorBrush((Color)ColorConverter.ConvertFromString("#2A2D32"));
+                    edge.StrokeThickness = 5;
+                }
+            }
+        }
+    }
+
     private void HighlightEdge(Line edge, Color color)
     {
         edge.Stroke = new SolidColorBrush(color);
         edge.StrokeThickness = 5;
     }
 
-    // Подсветка узлов
     private void HighlightNode(Grid node, Color color)
     {
         if (node.Children[0] is Ellipse ellipse)
@@ -153,36 +185,63 @@ public class FordFulkerson
         }
     }
 
-    // Подсветка найденного дополняющего пути
-    private void HighlightPath(List<string> path, GraphData graphData, Color color)
+    private async void HighlightPath(List<string> path, GraphData graphData, Color highlightColor)
     {
+        var originalColors = new Dictionary<string, Brush>();
+
         for (int i = 0; i < path.Count - 1; i++)
         {
             var edge = graphData.GetEdge(path[i], path[i + 1]);
             if (edge != null)
             {
-                edge.Stroke = new SolidColorBrush(color);
+                originalColors[$"{path[i]}->{path[i + 1]}"] = edge.Stroke;
+                edge.Stroke = new SolidColorBrush(highlightColor);
                 edge.StrokeThickness = 5;
             }
 
-            // Подсветка узлов пути
             var nodeGrid = graphData.GetNodeGrid(path[i]);
-            if (nodeGrid != null)
+            if (nodeGrid != null && nodeGrid.Children[0] is Ellipse ellipse)
             {
-                if (nodeGrid.Children[0] is Ellipse ellipse)
+                if (!originalColors.ContainsKey($"Node_{path[i]}"))
                 {
-                    ellipse.Fill = new SolidColorBrush(color);
+                    originalColors[$"Node_{path[i]}"] = ellipse.Fill;
                 }
+                ellipse.Fill = new SolidColorBrush(highlightColor);
             }
         }
 
-        // Подсветка последнего узла
-        var lastNodeGrid = graphData.GetNodeGrid(path.Last());
-        if (lastNodeGrid != null)
+        var lastNode = path.Last();
+        var lastNodeGrid = graphData.GetNodeGrid(lastNode);
+        if (lastNodeGrid != null && lastNodeGrid.Children[0] is Ellipse lastEllipse)
         {
-            if (lastNodeGrid.Children[0] is Ellipse ellipse)
+            if (!originalColors.ContainsKey($"Node_{lastNode}"))
             {
-                ellipse.Fill = new SolidColorBrush(color);
+                originalColors[$"Node_{lastNode}"] = lastEllipse.Fill;
+            }
+            lastEllipse.Fill = new SolidColorBrush(highlightColor);
+        }
+
+        await Task.Delay(500);
+        
+        foreach (var key in originalColors.Keys)
+        {
+            if (key.StartsWith("Node_"))
+            {
+                string node = key.Substring(5);
+                var nodeGrid = graphData.GetNodeGrid(node);
+                if (nodeGrid != null && nodeGrid.Children[0] is Ellipse ellipse)
+                {
+                    ellipse.Fill = originalNodeColors.ContainsKey(node) ? originalNodeColors[node] : Brushes.Transparent;
+                }
+            }
+            else
+            {
+                var edge = graphData.GetEdge(key.Split("->")[0], key.Split("->")[1]);
+                if (edge != null)
+                {
+                    edge.Stroke = originalColors[key];
+                    edge.StrokeThickness = 5;
+                }
             }
         }
     }

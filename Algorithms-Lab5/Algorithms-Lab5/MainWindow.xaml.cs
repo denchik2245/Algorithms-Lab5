@@ -262,14 +262,12 @@ namespace Algorithms_Lab5
             {
                 SelectedStartNode = nodeLabel;
                 var nodeGrid = GraphManager.GraphData.GetNodeGrid(nodeLabel);
-                OutputTextBox.AppendText($"Выбран узел {nodeLabel} в качестве начального.\n");
                 isSelectingStartNode = false;
             }
             else if (isSelectingEndNode)
             {
                 SelectedEndNode = nodeLabel;
                 var nodeGrid = GraphManager.GraphData.GetNodeGrid(nodeLabel);
-                OutputTextBox.AppendText($"Выбран узел {nodeLabel} в качестве конечного.\n");
                 isSelectingEndNode = false;
             }
         }
