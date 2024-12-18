@@ -26,7 +26,7 @@ namespace Algorithms_Lab5.Tools
                 MessageBox.Show("Граф успешно сохранён.", "Успех", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
-        
+
         private List<(Grid Node, double X, double Y)> GetNodesWithCoordinates(Canvas canvas)
         {
             var nodes = new List<(Grid Node, double X, double Y)>();
@@ -41,50 +41,81 @@ namespace Algorithms_Lab5.Tools
             }
             return nodes;
         }
-        
+
         private string[,] GenerateAdjacencyMatrixWithCoordinates(Canvas canvas)
         {
             var nodesWithCoordinates = GetNodesWithCoordinates(canvas);
             int nodeCount = nodesWithCoordinates.Count;
             string[,] matrix = new string[nodeCount, nodeCount + 2];
-            
+
+            // Инициализация матрицы смежности нулями и заполнение координат
             for (int i = 0; i < nodeCount; i++)
             {
                 for (int j = 0; j < nodeCount; j++)
                 {
                     matrix[i, j] = "0";
                 }
-               
+
                 matrix[i, nodeCount] = nodesWithCoordinates[i].X.ToString(CultureInfo.InvariantCulture);
                 matrix[i, nodeCount + 1] = nodesWithCoordinates[i].Y.ToString(CultureInfo.InvariantCulture);
             }
-            
+
+            // Обработка всех линий (ребер) на Canvas
             foreach (UIElement element in canvas.Children)
             {
-                if (element is Line line && line.Tag is Tuple<Grid, Grid, TextBlock> connectedNodes)
+                if (element is Line line)
                 {
-                    Grid startNode = connectedNodes.Item1;
-                    Grid endNode = connectedNodes.Item2;
-                    TextBlock weightText = connectedNodes.Item3;
-                    
-                    int startIndex = nodesWithCoordinates.FindIndex(n => n.Node == startNode);
-                    int endIndex = nodesWithCoordinates.FindIndex(n => n.Node == endNode);
+                    bool isDirected = false;
+                    Grid startNode = null;
+                    Grid endNode = null;
+                    TextBlock weightText = null;
 
-                    if (startIndex != -1 && endIndex != -1)
+                    // Используем уникальные имена переменных для Tuple
+                    if (line.Tag is Tuple<Grid, Grid, TextBlock, Polyline> directedTuple)
                     {
-                        string weight = weightText.Text.Trim();
-                        
-                        if (double.TryParse(weight, NumberStyles.Float, CultureInfo.InvariantCulture, out double parsedWeight))
+                        isDirected = true;
+                        startNode = directedTuple.Item1;
+                        endNode = directedTuple.Item2;
+                        weightText = directedTuple.Item3;
+                    }
+                    else if (line.Tag is Tuple<Grid, Grid, TextBlock> undirectedTuple)
+                    {
+                        isDirected = false;
+                        startNode = undirectedTuple.Item1;
+                        endNode = undirectedTuple.Item2;
+                        weightText = undirectedTuple.Item3;
+                    }
+
+                    if (startNode != null && endNode != null && weightText != null)
+                    {
+                        int startIndex = nodesWithCoordinates.FindIndex(n => n.Node == startNode);
+                        int endIndex = nodesWithCoordinates.FindIndex(n => n.Node == endNode);
+
+                        if (startIndex != -1 && endIndex != -1)
                         {
-                            if (parsedWeight > 0)
+                            string weight = weightText.Text.Trim();
+
+                            if (double.TryParse(weight, NumberStyles.Float, CultureInfo.InvariantCulture, out double parsedWeight))
                             {
-                                matrix[startIndex, endIndex] = parsedWeight.ToString(CultureInfo.InvariantCulture);
-                                matrix[endIndex, startIndex] = parsedWeight.ToString(CultureInfo.InvariantCulture);
+                                if (parsedWeight > 0)
+                                {
+                                    // Для направленного графа устанавливаем только одно направление
+                                    if (isDirected)
+                                    {
+                                        matrix[startIndex, endIndex] = parsedWeight.ToString(CultureInfo.InvariantCulture);
+                                    }
+                                    else
+                                    {
+                                        // Для ненаправленного графа устанавливаем оба направления
+                                        matrix[startIndex, endIndex] = parsedWeight.ToString(CultureInfo.InvariantCulture);
+                                        matrix[endIndex, startIndex] = parsedWeight.ToString(CultureInfo.InvariantCulture);
+                                    }
+                                }
                             }
-                        }
-                        else
-                        {
-                            MessageBox.Show($"Некорректный вес ребра между узлами {startIndex + 1} и {endIndex + 1}: '{weight}'. Вес не будет сохранён.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                            else
+                            {
+                                MessageBox.Show($"Некорректный вес ребра между узлами {startIndex + 1} и {endIndex + 1}: '{weight}'. Вес не будет сохранён.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                            }
                         }
                     }
                 }
@@ -92,7 +123,7 @@ namespace Algorithms_Lab5.Tools
 
             return matrix;
         }
-        
+
         private void SaveMatrixToCsv(string[,] matrix, string filePath)
         {
             using (StreamWriter writer = new StreamWriter(filePath))
@@ -113,4 +144,5 @@ namespace Algorithms_Lab5.Tools
         }
     }
 }
+
 
